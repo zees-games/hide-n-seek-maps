@@ -18,6 +18,9 @@ A map is judged by three things the genre's best maps share: **more than one way
 - `container(...)`: a shipping container, walkable on top, optionally open at one end, where it has a pair of doors that swing outward only (`doors="shut"`, `"open"` or None).
 - `hedge_maze(...)`: a seeded depth-first maze, the same every build (`random.Random(seed)`), gates on two sides.
 - `room_at(...)`: `Map.room` for an upper storey or a mezzanine.
+- `slab(...)`: a floor with rectangular holes left in it (an upper storey over stairwells, an atrium), as a few strips of boxes.
+- `classroom(...)`, `shop(...)` (six kinds), `fitting_rooms(...)`, `lights_over(...)`: the school's and the mall's rooms.
+- **Every furnishing helper takes `y`**: `bathroom` and `lockers` did not, and the school's upstairs toilets were first built on top of the downstairs ones, two stall doors in every doorway. `headless_maps`' doorway check found it.
 
 ## Doors, and why a door is a hole's fifth element
 
@@ -25,7 +28,7 @@ The brief asked for maps as interactive as the genre's best, and what those have
 
 **A door is declared on the hole it fills**: `(3.0, 4.4, 0.0, DOOR_H, {"name": "bedroom door"})`, and `Map.wall` hangs it. A door placed by coordinates beside the wall call is a door one edit away from not matching its hole, and nothing but a render would say so. `{"leaves": 2}` hangs a pair; a hole with a door gets no glass, which a raised hole otherwise does (the hayloft's doors were first built behind a pane of it). `fence(..., gate={...})` hangs one in every gap and `bathroom(..., doors=True)` one on every stall.
 
-**A swinging door opens away from whoever opens it** unless `away` is False, and `into` is only the way it stands when the map has it open. So `away: False` is for a door with something on one side: a stall (the toilet), a cottage's back door (the stove), a fire door (outward only, onto the escape), a door on a narrow walkway. **A secret door** slides into its wall, is the wall's own material and nearly its thickness, has no handle, and has a 6 mm gap where a door has 3 cm: with 3 cm its outline was the first thing a render showed. There is one on every map but the warehouse: a loose panel between two top-floor bedrooms in the flats, a cupboard under the manor's stair, a hollow stage in the village hall, loose tiles between the park toilets' two sides.
+**A swinging door opens away from whoever opens it** unless `away` is False, and `into` is only the way it stands when the map has it open. So `away: False` is for a door with something on one side: a stall (the toilet), a cottage's back door (the stove), a fire door (outward only, onto the escape), a door on a narrow walkway. **A secret door** slides into its wall, is the wall's own material and nearly its thickness, has no handle, and has a 6 mm gap where a door has 3 cm: with 3 cm its outline was the first thing a render showed. There is one on every map but the warehouse: a loose panel between two top-floor bedrooms in the flats, a cupboard under the manor's stair, a hollow stage in the village hall, loose tiles between the park toilets' two sides, the school library's archive, the mall cinema's projection booth.
 
 `headless_maps` swings every door each way it can go and fails one that passes through a wall or a prop, and sends a ray through every doorway with its door open.
 
