@@ -42,7 +42,7 @@
   {
    "at": [
     -4.0,
-    -0.1,
+    -0.12,
     -2.0
    ],
    "size": [
@@ -4092,12 +4092,48 @@
    "at": [
     -5.0,
     8.4,
-    -6.5
+    -11.4
    ],
    "size": [
     0.2,
     3.2,
-    11.0
+    1.2
+   ],
+   "mat": "paint",
+   "tint": [
+    0.92,
+    0.9,
+    0.84
+   ]
+  },
+  {
+   "at": [
+    -5.0,
+    9.4,
+    -10.3
+   ],
+   "size": [
+    0.2,
+    1.2,
+    1.0
+   ],
+   "mat": "paint",
+   "tint": [
+    0.92,
+    0.9,
+    0.84
+   ]
+  },
+  {
+   "at": [
+    -5.0,
+    8.4,
+    -5.4
+   ],
+   "size": [
+    0.2,
+    3.2,
+    8.8
    ],
    "mat": "paint",
    "tint": [
@@ -10492,6 +10528,769 @@
     0.95,
     0.85
    ]
+  }
+ ],
+ "doors": [
+  {
+   "at": [
+    -5.5,
+    1.15,
+    6.0
+   ],
+   "size": [
+    1.97,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "wood",
+   "angle": 100.0,
+   "tint": [
+    0.55,
+    0.4,
+    0.28
+   ],
+   "name": "front door",
+   "open": true
+  },
+  {
+   "at": [
+    -14.3,
+    1.15,
+    -12.0
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "wood",
+   "angle": -100.0,
+   "tint": [
+    0.55,
+    0.4,
+    0.28
+   ],
+   "name": "back door"
+  },
+  {
+   "at": [
+    10.0,
+    1.15,
+    -0.1
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "right",
+   "mat": "wood",
+   "yaw": 90.0,
+   "angle": -100.0,
+   "tint": [
+    0.55,
+    0.4,
+    0.28
+   ],
+   "name": "side door"
+  },
+  {
+   "at": [
+    -12.3,
+    1.15,
+    -1.0
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "wood",
+   "angle": 100.0,
+   "tint": [
+    0.55,
+    0.4,
+    0.28
+   ],
+   "name": "flat door"
+  },
+  {
+   "at": [
+    -1.3,
+    1.15,
+    -1.0
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "wood",
+   "angle": 100.0,
+   "tint": [
+    0.55,
+    0.4,
+    0.28
+   ],
+   "name": "flat door"
+  },
+  {
+   "at": [
+    -11.3,
+    1.15,
+    1.5
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "wood",
+   "angle": -100.0,
+   "tint": [
+    0.55,
+    0.4,
+    0.28
+   ],
+   "name": "flat door"
+  },
+  {
+   "at": [
+    5.7,
+    1.15,
+    1.5
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "wood",
+   "angle": -100.0,
+   "tint": [
+    0.55,
+    0.4,
+    0.28
+   ],
+   "name": "flat door"
+  },
+  {
+   "at": [
+    -8.3,
+    1.15,
+    -6.5
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "wood",
+   "angle": 100.0,
+   "tint": [
+    0.55,
+    0.4,
+    0.28
+   ],
+   "name": "bedroom door"
+  },
+  {
+   "at": [
+    3.2,
+    1.15,
+    -6.5
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "wood",
+   "angle": 100.0,
+   "tint": [
+    0.55,
+    0.4,
+    0.28
+   ],
+   "name": "bedroom door"
+  },
+  {
+   "at": [
+    1.5,
+    1.15,
+    -9.3
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "right",
+   "mat": "wood",
+   "yaw": 90.0,
+   "angle": 100.0,
+   "tint": [
+    0.9,
+    0.9,
+    0.88
+   ],
+   "name": "bathroom door"
+  },
+  {
+   "at": [
+    -16.0,
+    4.55,
+    -4.3
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "right",
+   "mat": "metal",
+   "yaw": 90.0,
+   "angle": -100.0,
+   "away": false,
+   "tint": [
+    0.5,
+    0.15,
+    0.12
+   ],
+   "name": "fire door"
+  },
+  {
+   "at": [
+    -12.3,
+    4.55,
+    -1.0
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "wood",
+   "angle": 100.0,
+   "tint": [
+    0.55,
+    0.4,
+    0.28
+   ],
+   "name": "flat door"
+  },
+  {
+   "at": [
+    -1.3,
+    4.55,
+    -1.0
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "wood",
+   "angle": 100.0,
+   "tint": [
+    0.55,
+    0.4,
+    0.28
+   ],
+   "name": "flat door"
+  },
+  {
+   "at": [
+    -11.3,
+    4.55,
+    1.5
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "wood",
+   "angle": -100.0,
+   "tint": [
+    0.55,
+    0.4,
+    0.28
+   ],
+   "name": "flat door"
+  },
+  {
+   "at": [
+    -3.3,
+    4.55,
+    1.5
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "wood",
+   "angle": -100.0,
+   "tint": [
+    0.55,
+    0.4,
+    0.28
+   ],
+   "name": "flat door"
+  },
+  {
+   "at": [
+    5.7,
+    4.55,
+    1.5
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "wood",
+   "angle": -100.0,
+   "tint": [
+    0.55,
+    0.4,
+    0.28
+   ],
+   "name": "flat door"
+  },
+  {
+   "at": [
+    -8.3,
+    4.55,
+    -6.5
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "wood",
+   "angle": 100.0,
+   "tint": [
+    0.55,
+    0.4,
+    0.28
+   ],
+   "name": "bedroom door"
+  },
+  {
+   "at": [
+    3.2,
+    4.55,
+    -6.5
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "wood",
+   "angle": 100.0,
+   "tint": [
+    0.55,
+    0.4,
+    0.28
+   ],
+   "name": "bedroom door"
+  },
+  {
+   "at": [
+    1.5,
+    4.55,
+    -9.3
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "right",
+   "mat": "wood",
+   "yaw": 90.0,
+   "angle": 100.0,
+   "tint": [
+    0.9,
+    0.9,
+    0.88
+   ],
+   "name": "bathroom door"
+  },
+  {
+   "at": [
+    -16.0,
+    7.95,
+    4.4
+   ],
+   "size": [
+    1.17,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "right",
+   "mat": "metal",
+   "yaw": 90.0,
+   "angle": -100.0,
+   "away": false,
+   "tint": [
+    0.5,
+    0.15,
+    0.12
+   ],
+   "name": "fire door"
+  },
+  {
+   "at": [
+    -12.3,
+    7.95,
+    -1.0
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "wood",
+   "angle": 100.0,
+   "tint": [
+    0.55,
+    0.4,
+    0.28
+   ],
+   "name": "flat door"
+  },
+  {
+   "at": [
+    -1.3,
+    7.95,
+    -1.0
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "wood",
+   "angle": 100.0,
+   "tint": [
+    0.55,
+    0.4,
+    0.28
+   ],
+   "name": "flat door"
+  },
+  {
+   "at": [
+    -11.3,
+    7.95,
+    1.5
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "wood",
+   "angle": -100.0,
+   "tint": [
+    0.55,
+    0.4,
+    0.28
+   ],
+   "name": "flat door"
+  },
+  {
+   "at": [
+    -3.3,
+    7.95,
+    1.5
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "wood",
+   "angle": -100.0,
+   "tint": [
+    0.55,
+    0.4,
+    0.28
+   ],
+   "name": "flat door"
+  },
+  {
+   "at": [
+    5.7,
+    7.95,
+    1.5
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "wood",
+   "angle": -100.0,
+   "tint": [
+    0.55,
+    0.4,
+    0.28
+   ],
+   "name": "flat door"
+  },
+  {
+   "at": [
+    -5.0,
+    7.8,
+    -10.3
+   ],
+   "size": [
+    0.994,
+    1.996,
+    0.17
+   ],
+   "motion": "slide",
+   "hinge": "right",
+   "mat": "paint",
+   "yaw": 90.0,
+   "tint": [
+    0.92,
+    0.9,
+    0.84
+   ],
+   "name": "loose panel",
+   "secret": true
+  },
+  {
+   "at": [
+    -8.3,
+    7.95,
+    -6.5
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "wood",
+   "angle": 100.0,
+   "tint": [
+    0.55,
+    0.4,
+    0.28
+   ],
+   "name": "bedroom door"
+  },
+  {
+   "at": [
+    3.2,
+    7.95,
+    -6.5
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "wood",
+   "angle": 100.0,
+   "tint": [
+    0.55,
+    0.4,
+    0.28
+   ],
+   "name": "bedroom door"
+  },
+  {
+   "at": [
+    1.5,
+    7.95,
+    -9.3
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "right",
+   "mat": "wood",
+   "yaw": 90.0,
+   "angle": 100.0,
+   "tint": [
+    0.9,
+    0.9,
+    0.88
+   ],
+   "name": "bathroom door"
+  },
+  {
+   "at": [
+    7.25,
+    11.35,
+    -1.0
+   ],
+   "size": [
+    1.47,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "metal",
+   "angle": -100.0,
+   "tint": [
+    0.35,
+    0.4,
+    0.45
+   ],
+   "name": "roof door"
+  },
+  {
+   "at": [
+    -3.6,
+    11.2,
+    4.5
+   ],
+   "size": [
+    1.17,
+    1.982,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "wood",
+   "angle": -100.0,
+   "tint": [
+    0.45,
+    0.32,
+    0.22
+   ],
+   "name": "shed door"
+  },
+  {
+   "at": [
+    17.8,
+    1.15,
+    6.0
+   ],
+   "size": [
+    1.57,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "wood",
+   "angle": -100.0,
+   "away": false,
+   "tint": [
+    0.2,
+    0.35,
+    0.3
+   ],
+   "name": "shop door",
+   "open": true
+  },
+  {
+   "at": [
+    13.0,
+    1.15,
+    3.7
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "right",
+   "mat": "wood",
+   "yaw": 90.0,
+   "angle": 100.0,
+   "tint": [
+    0.55,
+    0.4,
+    0.28
+   ],
+   "name": "shop's side door"
+  },
+  {
+   "at": [
+    20.2,
+    1.15,
+    -2.5
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "wood",
+   "angle": 100.0,
+   "tint": [
+    0.55,
+    0.4,
+    0.28
+   ],
+   "name": "stock room door"
   }
  ],
  "spawns": {

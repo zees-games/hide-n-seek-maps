@@ -25,6 +25,10 @@ Conventions, which every function below keeps:
   (see `flight`). A player steps 0.4 m.
 - A crawl space is 1.1 m high: a person fits only crouched (0.95 m), so it is a hiding place a
   seeker has to get down to look into.
+- A door is a hole in a wall with a fifth element, a dict of the door's options: `(3.0, 4.4,
+  0.0, DOOR_H, {"name": "bedroom door"})`. The panel is cut to the hole, so the two cannot
+  disagree. `{"secret": True}` is a panel of the wall's own material that slides into the wall:
+  a passage nobody sees until somebody tries the wall. See `Map.door`.
 """
 
 import json
@@ -41,6 +45,7 @@ GAME_CATALOGUE = os.path.join(ROOT, "..", "game-hide-n-seek", "props", "catalogu
 WALL = 0.2          # an interior wall
 OUTER = 0.3         # an exterior wall, brick outside and paint inside
 DOOR_W = 1.4
+GROUND = -0.02      # the ground round the buildings, a hair under their floors (see Map.room)
 DOOR_H = 2.3
 SILL = 0.9          # a window's bottom
 HEAD = 2.2          # a window's top
@@ -90,6 +95,7 @@ class Map:
         self.boxes = []
         self.props = []
         self.lights = []
+        self.doors = []
         self.spawns = {"hiders": [], "seekers": []}
 
     # --- Boxes -------------------------------------------------------------
@@ -149,7 +155,22 @@ class Map:
             fixed = a[0]
 
         length = end - start
-        cuts = sorted(holes, key=lambda h: h[0])
+        cuts = sorted([tuple(h[:4]) for h in holes], key=lambda h: h[0])
+        doorways = set()
+        for h in holes:
+            if len(h) > 4 and h[4] is not None:
+                doorways.add(tuple(h[:4]))
+                opts = dict(h[4])
+                # A pair of leaves, hung from either side of the hole and meeting in the middle.
+                if opts.pop("leaves", 1) == 2:
+                    mid = start + (h[0] + h[1]) / 2
+                    self.door(along, start + h[0], mid, fixed, y0 + h[2], y0 + h[3], hinge="start",
+                              wall_mat=mat, wall_tint=tint, wall_thick=thick, **opts)
+                    self.door(along, mid, start + h[1], fixed, y0 + h[2], y0 + h[3], hinge="end",
+                              wall_mat=mat, wall_tint=tint, wall_thick=thick, **opts)
+                    continue
+                self.door(along, start + h[0], start + h[1], fixed, y0 + h[2], y0 + h[3],
+                          wall_mat=mat, wall_tint=tint, wall_thick=thick, **opts)
         layers = [(mat, tint, thick, 0.0)]
         if inner:
             layers = [(mat, tint, thick - 0.06, -0.03), (inner, inner_tint, 0.06, (thick - 0.06) / 2.0)]
@@ -167,7 +188,7 @@ class Map:
 
         if glass:
             for h0, h1, hb, ht in cuts:
-                if hb > 0.0:
+                if hb > 0.0 and (h0, h1, hb, ht) not in doorways:
                     self._wall_piece(along, start + h0, start + h1, fixed, y0 + hb, y0 + ht, 0.04, "glass", None)
 
     def _wall_piece(self, along, p0, p1, fixed, y0, y1, thick, mat, tint):
@@ -177,6 +198,64 @@ class Map:
             self.span(p0, p1, y0, y1, fixed - thick / 2, fixed + thick / 2, mat, tint)
         else:
             self.span(fixed - thick / 2, fixed + thick / 2, y0, y1, p0, p1, mat, tint)
+
+    def door(self, along, p0, p1, fixed, y0, y1, name="", hinge="start", into="+", motion=None,
+             secret=False, open=False, mat=None, tint=None, seconds=None, away=True, travel=None, angle=100.0,
+             wall_mat="wood", wall_tint=None, wall_thick=WALL):
+        """A door panel filling the hole from p0 to p1 (world, along the wall) and y0 to y1, in
+        the wall along `along` at `fixed`.
+
+        `hinge` is the end of the hole it hangs from ('start' is the smaller coordinate), `into`
+        the side it swings to when it is opened from nowhere in particular ('+' is +z for an x
+        wall, +x for a z wall); the game swings it away from whoever opens it unless `away` is
+        False. `motion` is 'swing', 'slide' (along the wall, towards the hinge end) or 'lift'
+        (up, a shutter). A secret door slides, is the wall's own material, has no handle, and is
+        nearly the wall's thickness, so it reads as wall.
+        """
+        width, height = p1 - p0, y1 - y0
+        mid = (p0 + p1) / 2
+        if along == "x":
+            at, yaw, side = (mid, y0 + height / 2, fixed), 0.0, (-1 if hinge == "start" else 1)
+        else:
+            # Turned 90 degrees, the panel's own +x is world -z: the start (smaller z) is its right.
+            at, yaw, side = (fixed, y0 + height / 2, mid), 90.0, (1 if hinge == "start" else -1)
+        if secret:
+            motion = motion or "slide"
+            thick = max(wall_thick - 0.03, 0.05)
+            mat = mat or wall_mat
+            tint = tint if tint is not None else wall_tint
+        else:
+            motion = motion or "swing"
+            thick = 0.06
+            mat = mat or "wood"
+            tint = tint if tint is not None else (0.55, 0.4, 0.28)
+        # The free edge's local z is side * width * sin(angle), and local z is the into-axis for
+        # both kinds of wall, so the angle's sign is into times side.
+        sign = (1 if into == "+" else -1) * side
+        # A plain door has a finger's gap round it; a secret one a hair's, or its outline shows.
+        gap = 0.006 if secret else 0.03
+        d = {"at": v3(*at), "size": v3(width - gap, height - gap * 0.6, thick), "motion": motion,
+             "hinge": "left" if side < 0 else "right", "mat": mat}
+        if yaw:
+            d["yaw"] = yaw
+        if motion == "swing":
+            d["angle"] = r(angle * sign)
+            if not away:
+                d["away"] = False
+        if tint is not None:
+            d["tint"] = [r(c) for c in tint]
+        if name:
+            d["name"] = name
+        if secret:
+            d["secret"] = True
+        if open:
+            d["open"] = True
+        if seconds:
+            d["seconds"] = seconds
+        if travel:
+            d["travel"] = travel
+        self.doors.append(d)
+        return d
 
     # --- Props, lights, spawns ----------------------------------------------
 
@@ -227,7 +306,11 @@ class Map:
         """A floor, a ceiling over it with a roof above, and its lamps. Walls are separate.
 
         `eave` is how far the roof reaches past the room: over the walls, and out past the
-        building. A room beside a taller one wants less, or its roof shows inside the other."""
+        building. A room beside a taller one wants less, or its roof shows inside the other.
+
+        Its floor is at y 0 and the ground round a building is two centimetres lower (`GROUND`):
+        at the same height, the two are drawn in stripes of each other. The ground goes down
+        rather than the floor up, so that a rug laid on a floor is not laid under it."""
         self.floor(x0, z0, x1, z1, floor_mat, floor_tint)
         if ceiling:
             self.ceiling(x0, z0, x1, z1, height, ceiling, None, roof, roof_tint, eave)
@@ -336,24 +419,30 @@ class Map:
         self.doc["boxes"] = self.boxes
         self.doc["props"] = self.props
         self.doc["lights"] = self.lights
+        self.doc["doors"] = self.doors
         self.doc["spawns"] = self.spawns
         return self.doc
 
 
 # --- Furnishing ------------------------------------------------------------------
 
-def bathroom(m, x0, z0, x1, z1, stalls=2):
-    """Stalls with toilets along the back, sinks along the side."""
+def bathroom(m, x0, z0, x1, z1, stalls=2, doors=True):
+    """Stalls with toilets along the back, sinks along the side. With `doors`, every stall has
+    one, which opens outward only (inward, the toilet is in the way) and stops a hand's width
+    off the floor, as a stall's does."""
     stall_w = 1.5
     for i in range(stalls):
         sx = x0 + 0.2 + i * stall_w
         m.prop("furniture_toilet", sx + stall_w / 2, z1 - 0.6, 180.0)
         if i > 0:
             m.span(sx - 0.03, sx + 0.03, 0.15, 2.0, z1 - 1.7, z1, "metal", (0.75, 0.82, 0.88))
+        if doors:
+            m.door("x", sx + 0.03 if i > 0 else sx, sx + stall_w - 0.03, z1 - 1.7, 0.15, 2.0, name="stall door",
+                   hinge="start", into="-", away=False, angle=90.0, mat="metal", tint=(0.62, 0.72, 0.8))
     m.span(x0 + 0.2 + stalls * stall_w - 0.03, x0 + 0.2 + stalls * stall_w + 0.03, 0.15, 2.0, z1 - 1.7, z1, "metal", (0.75, 0.82, 0.88))
     for i in range(2):
         m.against("furniture_bathroom_sink_square", "e", x1, z0 + 1.0 + i * 1.2)
-    m.prop("furniture_trashcan", x1 - 0.4, z0 + 3.4)
+    m.prop("furniture_trashcan", x1 - 0.4, z0 + 0.2)
     m.against("furniture_bathroom_cabinet", "w", x0, z0 + 0.8)
 
 
@@ -390,8 +479,10 @@ def frange(a, b, step):
     return out
 
 
-def fence(m, x0, z0, x1, z1, height=1.6, mat="wood", tint=(0.62, 0.48, 0.34), gaps=()):
-    """A fence round an area, as thin walls with gates (gaps: (side, from, to))."""
+def fence(m, x0, z0, x1, z1, height=1.6, mat="wood", tint=(0.62, 0.48, 0.34), gaps=(), skip=(), gate=None):
+    """A fence round an area, as thin walls with gates (gaps: (side, from, to)), leaving out the
+    sides in `skip`: a garden's side along its house, which is the house's wall. `gate` is a
+    door's options, hung in every gap; without it a gap is just a gap."""
     sides = {
         "n": ((x0, z0), (x1, z0), "x"),
         "s": ((x0, z1), (x1, z1), "x"),
@@ -399,7 +490,10 @@ def fence(m, x0, z0, x1, z1, height=1.6, mat="wood", tint=(0.62, 0.48, 0.34), ga
         "e": ((x1, z0), (x1, z1), "z"),
     }
     for side, (a, b, along) in sides.items():
-        holes = [(g0, g1, 0.0, height) for gs, g0, g1 in gaps if gs == side]
+        if side in skip:
+            continue
+        holes = [(g0, g1, 0.0, height, dict(gate, mat=gate.get("mat", mat), tint=gate.get("tint", tint)) if gate else None)
+                 for gs, g0, g1 in gaps if gs == side]
         m.wall(a, b, along, mat, tint, height=height, thick=0.12, holes=holes, glass=False)
 
 
@@ -511,10 +605,13 @@ def rack(m, x0, x1, z, seed, depth=1.15, shelves=(1.35, 2.55), height=3.6, tint=
                 m.prop(pid, cx - 0.8 + j * 0.85, z + ((k >> (j + 3)) % 3 - 1) * 0.15, ((k >> j) % 20) - 10, y=s)
 
 
-def container(m, x0, z0, along, y=0.0, open_end=None, tint=(0.62, 0.22, 0.18), length=6.0, width=2.4, height=2.6):
+def container(m, x0, z0, along, y=0.0, open_end=None, tint=(0.62, 0.22, 0.18), length=6.0, width=2.4, height=2.6,
+              doors="shut"):
     """A shipping container with its near corner at (x0, z0) running `along` x or z, solid
-    everywhere except `open_end` ('w'/'e' for one along x, 'n'/'s' along z), which is open:
-    a room you can hide at the back of. Its roof is walkable."""
+    everywhere except `open_end` ('w'/'e' for one along x, 'n'/'s' along z), which is a pair of
+    doors: a room you can hide at the back of and shut yourself into. `doors` is 'shut', 'open'
+    or None for an end with no doors at all. The leaves swing outward only, as a container's
+    do. Its roof is walkable."""
     t = 0.1
     x1 = x0 + (length if along == "x" else width)
     z1 = z0 + (width if along == "x" else length)
@@ -534,6 +631,18 @@ def container(m, x0, z0, along, y=0.0, open_end=None, tint=(0.62, 0.22, 0.18), l
             m.span(x0 + t, x1 - t, y + 0.15, y + height - t, z0, z0 + t, "metal", tint)
         if open_end != "s":
             m.span(x0 + t, x1 - t, y + 0.15, y + height - t, z1 - t, z1, "metal", tint)
+    if open_end and doors:
+        leaf = {"name": "container door", "away": False, "open": doors == "open", "mat": "metal",
+                "tint": tuple(c * 0.8 for c in tint)}
+        if open_end in ("w", "e"):
+            at, into, a, b = (x0 + t / 2 if open_end == "w" else x1 - t / 2), ("-" if open_end == "w" else "+"), z0 + t, z1 - t
+            wall_along = "z"
+        else:
+            at, into, a, b = (z0 + t / 2 if open_end == "n" else z1 - t / 2), ("-" if open_end == "n" else "+"), x0 + t, x1 - t
+            wall_along = "x"
+        mid = (a + b) / 2
+        m.door(wall_along, a, mid, at, y + 0.15, y + height - t, hinge="start", into=into, **leaf)
+        m.door(wall_along, mid, b, at, y + 0.15, y + height - t, hinge="end", into=into, **leaf)
     return (x0, z0, x1, z1)
 
 
@@ -696,7 +805,7 @@ def apartments():
     plaster = (0.92, 0.90, 0.84)
 
     # The lot: concrete, the street, the boundary.
-    m.floor(-32, -28, 24, 24, "concrete", (0.82, 0.82, 0.8))
+    m.floor(-32, -28, 24, 24, "concrete", (0.82, 0.82, 0.8), y=GROUND)
     m.overlay(-32, 11, 24, 19, "asphalt")
     for x in frange(-30, 22, 4.0):
         m.overlay(x, 14.9, x + 2.0, 15.1, "line", (1.0, 0.95, 0.6))
@@ -722,32 +831,44 @@ def apartments():
         west_holes = [(5.0, 6.4, SILL, HEAD), (11.5, 12.9, SILL, HEAD)]
         east_holes = [(13.0, 14.8, SILL, HEAD)]
         if k == 0:
-            south_holes = [(1.0, 2.8, SILL, HEAD), (9.5, 11.5, 0.0, DOOR_H), (18.5, 20.3, SILL, HEAD)]
-            north_holes = [(1.0, 2.4, 0.0, DOOR_H), (13.5, 15.3, SILL, HEAD)]
+            # The front door stands open: the street is where the seekers count.
+            south_holes = [(1.0, 2.8, SILL, HEAD), (9.5, 11.5, 0.0, DOOR_H, {"name": "front door", "into": "-", "open": True}), (18.5, 20.3, SILL, HEAD)]
+            north_holes = [(1.0, 2.4, 0.0, DOOR_H, {"name": "back door", "into": "+"}), (13.5, 15.3, SILL, HEAD)]
             west_holes = [(5.0, 6.4, SILL, HEAD)]
-            east_holes = [(11.2, 12.6, 0.0, DOOR_H)]
+            east_holes = [(11.2, 12.6, 0.0, DOOR_H, {"name": "side door", "into": "-"})]
+        # A fire door opens outward and only outward, onto the escape.
+        fire = {"name": "fire door", "into": "-", "away": False, "mat": "metal", "tint": (0.5, 0.15, 0.12)}
         if k == 1:
-            west_holes = [(7.0, 8.4, 0.0, DOOR_H), (11.5, 12.9, SILL, HEAD)]     # to the fire escape
+            west_holes = [(7.0, 8.4, 0.0, DOOR_H, fire), (11.5, 12.9, SILL, HEAD)]     # to the fire escape
         if k == 2:
-            west_holes = [(5.0, 6.4, SILL, HEAD), (15.8, 17.0, 0.0, DOOR_H)]     # to the fire escape
+            west_holes = [(5.0, 6.4, SILL, HEAD), (15.8, 17.0, 0.0, DOOR_H, fire)]     # to the fire escape
         m.wall((X0, Z1), (X1, Z1), "x", "brick", None, height=H, y0=y, thick=OUTER, holes=south_holes, inner="plaster", inner_tint=plaster)
         m.wall((X0, Z0), (X1, Z0), "x", "brick", None, height=H, y0=y, thick=OUTER, holes=north_holes)
         m.wall((X0, Z0), (X0, Z1), "z", "brick", None, height=H, y0=y, thick=OUTER, holes=west_holes)
         m.wall((X1, Z0), (X1, Z1), "z", "brick", None, height=H, y0=y, thick=OUTER, holes=east_holes, inner=None)
 
         # The corridor between z -1 and 1.5, the stairwell's wall at x 6, the flats either side.
-        north_doors = [(3.0, 4.4, 0.0, DOOR_H), (14.0, 15.4, 0.0, DOOR_H)]
+        # Every flat's own front door, off the corridor; the ground floor's middle south one is
+        # the lobby, which has none.
+        flat = {"name": "flat door", "into": "-"}
+        south = {"name": "flat door", "into": "+"}
+        north_doors = [(3.0, 4.4, 0.0, DOOR_H, flat), (14.0, 15.4, 0.0, DOOR_H, flat)]
         m.wall((X0, -1.0), (6.0, -1.0), "x", "paint", plaster, height=H, y0=y, holes=north_doors)
         m.wall((6.0, Z0), (6.0, -1.0), "z", "paint", plaster, height=H, y0=y)
         m.wall((X0, 1.5), (X1, 1.5), "x", "paint", plaster, height=H, y0=y,
-               holes=[(4.0, 5.4, 0.0, DOOR_H), (12.0, 13.4, 0.0, DOOR_H), (21.0, 22.4, 0.0, DOOR_H)])
-        m.wall((-5.0, Z0), (-5.0, -1.0), "z", "paint", plaster, height=H, y0=y)
+               holes=[(4.0, 5.4, 0.0, DOOR_H, south), (12.0, 13.4, 0.0, DOOR_H, None if k == 0 else south),
+                      (21.0, 22.4, 0.0, DOOR_H, south)])
+        # Between the two north-west bedrooms on the top floor, a panel of wall that slides: the
+        # one way from one flat to the next that is not the corridor.
+        m.wall((-5.0, Z0), (-5.0, -1.0), "z", "paint", plaster, height=H, y0=y,
+               holes=[(1.2, 2.2, 0.0, 2.0, {"name": "loose panel", "secret": True, "hinge": "start"})] if k == 2 else ())
         m.wall((-7.0, 1.5), (-7.0, Z1), "z", "paint", plaster, height=H, y0=y)
         m.wall((1.5, 1.5), (1.5, Z1), "z", "paint", plaster, height=H, y0=y)
         # In each north flat, a wall between the living room and the bedroom, with a door.
         # (The east flat's bedroom is through its bathroom.)
-        m.wall((X0, -6.5), (-5.0, -6.5), "x", "paint", plaster, height=H, y0=y, holes=[(7.0, 8.4, 0.0, DOOR_H)])
-        m.wall((-5.0, -6.5), (6.0, -6.5), "x", "paint", plaster, height=H, y0=y, holes=[(7.5, 8.9, 0.0, DOOR_H)])
+        bed = {"name": "bedroom door", "into": "-"}
+        m.wall((X0, -6.5), (-5.0, -6.5), "x", "paint", plaster, height=H, y0=y, holes=[(7.0, 8.4, 0.0, DOOR_H, bed)])
+        m.wall((-5.0, -6.5), (6.0, -6.5), "x", "paint", plaster, height=H, y0=y, holes=[(7.5, 8.9, 0.0, DOOR_H, bed)])
 
         # Lights and furniture, per floor.
         for (a, b, c, d) in [(X0, -6.5, -5.0, -1.0), (-5.0, -6.5, 6.0, -1.0), (X0, Z0, -5.0, -6.5), (-5.0, Z0, 6.0, -6.5),
@@ -762,7 +883,8 @@ def apartments():
         living_room(m, -4.9, -6.4, 5.9, -1.1, y=y)
         bedroom(m, -4.9, Z0 + 0.15, 1.4, -6.6, y=y, double=(k == 1))
         bath(m, 1.6, Z0 + 0.15, 5.9, -6.6, y=y)
-        m.wall((1.5, Z0), (1.5, -6.5), "z", "paint", plaster, height=H, y0=y, holes=[(2.0, 3.4, 0.0, DOOR_H)])
+        m.wall((1.5, Z0), (1.5, -6.5), "z", "paint", plaster, height=H, y0=y,
+               holes=[(2.0, 3.4, 0.0, DOOR_H, {"name": "bathroom door", "into": "+", "tint": (0.9, 0.9, 0.88)})])
         # The studios to the south: a kitchen along the back wall and a bed. On the ground floor
         # the middle one is the lobby, which the front door opens into.
         for (a, c) in [(X0 + 0.15, -7.1), (-6.9, 1.4), (1.6, X1 - 0.15)]:
@@ -791,7 +913,8 @@ def apartments():
     m.wall((6.0, Z0), (6.0, -1.0), "z", "brick", None, height=2.8, y0=TOP)
     m.wall((X1, Z0), (X1, -1.0), "z", "brick", None, height=2.8, y0=TOP)
     m.wall((6.0, Z0), (X1, Z0), "x", "brick", None, height=2.8, y0=TOP)
-    m.wall((6.0, -1.0), (X1, -1.0), "x", "brick", None, height=2.8, y0=TOP, holes=[(0.5, 2.0, 0.0, DOOR_H)])
+    m.wall((6.0, -1.0), (X1, -1.0), "x", "brick", None, height=2.8, y0=TOP,
+           holes=[(0.5, 2.0, 0.0, DOOR_H, {"name": "roof door", "into": "+", "mat": "metal", "tint": (0.35, 0.4, 0.45)})])
     m.span(5.8, 10.2, TOP + 2.8, TOP + 3.0, Z0 - 0.2, -0.8, "roof")
     m.light(8.0, TOP + 2.3, -6.0, rng=7.0, energy=0.8)
 
@@ -806,7 +929,8 @@ def apartments():
     for i, ax in enumerate((-4.0, -2.4, -0.8)):
         m.span(ax - 0.6, ax + 0.6, TOP, TOP + 1.1, -10.0, -8.9, "metal", (0.85, 0.86, 0.86))
     m.wall((-6.0, 1.5), (-1.0, 1.5), "x", "wood", (0.6, 0.45, 0.3), height=2.2, y0=TOP, thick=0.12)
-    m.wall((-6.0, 4.5), (-1.0, 4.5), "x", "wood", (0.6, 0.45, 0.3), height=2.2, y0=TOP, thick=0.12, holes=[(1.8, 3.0, 0.0, 2.0)])
+    m.wall((-6.0, 4.5), (-1.0, 4.5), "x", "wood", (0.6, 0.45, 0.3), height=2.2, y0=TOP, thick=0.12,
+           holes=[(1.8, 3.0, 0.0, 2.0, {"name": "shed door", "into": "+", "tint": (0.45, 0.32, 0.22)})])
     m.wall((-6.0, 1.5), (-6.0, 4.5), "z", "wood", (0.6, 0.45, 0.3), height=2.2, y0=TOP, thick=0.12)
     m.wall((-1.0, 1.5), (-1.0, 4.5), "z", "wood", (0.6, 0.45, 0.3), height=2.2, y0=TOP, thick=0.12)
     m.span(-6.2, -0.8, TOP + 2.2, TOP + 2.35, 1.3, 4.7, "roof")
@@ -860,10 +984,11 @@ def apartments():
     sx0, sx1, sz0, sz1 = 13.0, 22.0, -6.0, 6.0
     m.room(sx0, sz0, sx1, sz1, "tile_check", None, height=3.2, lights=1, energy=1.2)
     m.wall((sx0, sz0), (sx1, sz0), "x", "brick", None, thick=OUTER, inner="paint", inner_tint=(0.95, 0.95, 0.9))
-    m.wall((sx0, sz1), (sx1, sz1), "x", "brick", None, thick=OUTER, holes=[(1.0, 3.0, SILL, HEAD), (4.0, 5.6, 0.0, DOOR_H), (6.6, 8.4, SILL, HEAD)])
-    m.wall((sx0, sz0), (sx0, sz1), "z", "brick", None, thick=OUTER, holes=[(9.0, 10.4, 0.0, DOOR_H)])
+    m.wall((sx0, sz1), (sx1, sz1), "x", "brick", None, thick=OUTER,
+           holes=[(1.0, 3.0, SILL, HEAD), (4.0, 5.6, 0.0, DOOR_H, {"name": "shop door", "into": "+", "away": False, "open": True, "tint": (0.2, 0.35, 0.3)}), (6.6, 8.4, SILL, HEAD)])
+    m.wall((sx0, sz0), (sx0, sz1), "z", "brick", None, thick=OUTER, holes=[(9.0, 10.4, 0.0, DOOR_H, {"name": "shop's side door", "into": "+"})])
     m.wall((sx1, sz0), (sx1, sz1), "z", "brick", None, thick=OUTER)
-    m.wall((sx0, -2.5), (sx1, -2.5), "x", "paint", (0.95, 0.95, 0.9), holes=[(6.5, 7.9, 0.0, DOOR_H)])
+    m.wall((sx0, -2.5), (sx1, -2.5), "x", "paint", (0.95, 0.95, 0.9), holes=[(6.5, 7.9, 0.0, DOOR_H, {"name": "stock room door", "into": "-"})])
     for az in (0.0, 2.6):
         for i in range(4):
             m.prop("furniture_kitchen_bar", 15.5 + i * 1.0, az, 0.0)
@@ -912,7 +1037,7 @@ def warehouse():
     steel = (0.58, 0.62, 0.66)
 
     # The quay: concrete to z 30, then the water.
-    m.floor(-36, -30, 30, 30, "concrete", (0.78, 0.78, 0.76))
+    m.floor(-36, -30, 30, 30, "concrete", (0.78, 0.78, 0.76), y=GROUND)
     m.span(-36, 30, -6.2, -6.0, 30, 46, "sand", (0.4, 0.38, 0.32))
     m.span(-36, 30, -0.9, -0.8, 30, 46, "water", None, solid=False)
     boundary(m, -36, -30, 30, 46, height=3.0, mat="metal", tint=(0.45, 0.48, 0.5))
@@ -925,9 +1050,12 @@ def warehouse():
     m.wall((HX0, HZ0), (HX1, HZ0), "x", "metal", steel, height=HH, thick=OUTER,
            holes=[(4.0, 7.0, 5.6, 6.8), (12.0, 15.0, 5.6, 6.8), (24.0, 27.0, 5.6, 6.8)])
     m.wall((HX0, HZ1), (HX1, HZ1), "x", "metal", steel, height=HH, thick=OUTER,
-           holes=[(6.0, 10.0, 0.0, 4.5), (16.0, 20.0, 0.0, 4.5), (30.0, 31.4, 0.0, DOOR_H)])
+           holes=[(6.0, 10.0, 0.0, 4.5, {"name": "loading bay shutter", "motion": "lift", "travel": 3.3, "mat": "metal", "tint": (0.5, 0.52, 0.5), "seconds": 1.6, "open": True}),
+                  (16.0, 20.0, 0.0, 4.5, {"name": "loading bay shutter", "motion": "lift", "travel": 3.3, "mat": "metal", "tint": (0.5, 0.52, 0.5), "seconds": 1.6}),
+                  (30.0, 31.4, 0.0, DOOR_H, {"name": "side door", "into": "+", "mat": "metal", "tint": (0.3, 0.4, 0.55)})])
     m.wall((HX0, HZ0), (HX0, HZ1), "z", "metal", steel, height=HH, thick=OUTER, holes=[(10.0, 13.0, 5.6, 6.8)])
-    m.wall((HX1, HZ0), (HX1, HZ1), "z", "metal", steel, height=HH, thick=OUTER, holes=[(6.0, 7.4, 0.0, DOOR_H), (14.0, 17.0, 5.6, 6.8)])
+    m.wall((HX1, HZ0), (HX1, HZ1), "z", "metal", steel, height=HH, thick=OUTER,
+           holes=[(6.0, 7.4, 0.0, DOOR_H, {"name": "fire door", "into": "+", "away": False, "mat": "metal", "tint": (0.5, 0.15, 0.12)}), (14.0, 17.0, 5.6, 6.8)])
     for (lx, lz) in ((-16.0, -8.0), (-6.0, -8.0), (4.0, 2.0), (-16.0, 4.0), (-6.0, 4.0), (8.0, -4.0)):
         m.lamp_panel(lx, lz, HH, w=1.6, d=0.5)
         m.light(lx, HH - 1.0, lz, rng=14.0, energy=0.8, colour=(1.0, 0.88, 0.7))
@@ -968,7 +1096,7 @@ def warehouse():
     flight(m, 12.0, 13.6, -8.0, -2.0, 0.0, MY, "n", "metal", (0.3, 0.3, 0.32), thick=0.15)
     m.wall((4.0, HZ0 + 0.15), (4.0, -9.0), "z", "paint", (0.85, 0.85, 0.8), height=2.6, y0=MY, thick=0.12)
     m.wall((4.0, -9.0), (HX1 - 0.15, -9.0), "x", "paint", (0.85, 0.85, 0.8), height=2.6, y0=MY, thick=0.12,
-           holes=[(1.0, 3.0, 1.0, 2.0), (4.2, 5.6, 0.0, DOOR_H), (6.5, 8.5, 1.0, 2.0)])
+           holes=[(1.0, 3.0, 1.0, 2.0), (4.2, 5.6, 0.0, DOOR_H, {"name": "office door", "into": "-", "away": False}), (6.5, 8.5, 1.0, 2.0)])
     m.span(4.0, HX1 - 0.15, MY + 2.6, MY + 2.7, HZ0 + 0.15, -9.0, "ceiling")
     m.light(9.0, MY + 2.2, -11.5, rng=7.0, energy=1.0)
     m.against("furniture_desk", "n", HZ0 + 0.3, 6.5, y=MY)
@@ -988,13 +1116,13 @@ def warehouse():
 
     # The yard: containers, some stacked, some open, one with stairs to its roof.
     red, blue, green, grey = (0.62, 0.22, 0.18), (0.18, 0.32, 0.6), (0.2, 0.45, 0.3), (0.5, 0.5, 0.52)
-    container(m, -30.0, 14.0, "x", open_end="e", tint=blue)
+    container(m, -30.0, 14.0, "x", open_end="e", tint=blue, doors="open")
     container(m, -30.0, 14.0, "x", y=2.6, tint=red)
     container(m, -30.0, 17.0, "x", open_end="e", tint=green)
     container(m, -30.0, 22.0, "x", tint=grey)
     container(m, -20.0, 20.0, "x", open_end="w", tint=red)
     flight(m, -14.0, -10.0, 20.1, 21.3, 0.0, 2.6, "w", "metal", (0.3, 0.3, 0.32), thick=0.12)
-    container(m, -6.0, 18.0, "z", open_end="s", tint=green)
+    container(m, -6.0, 18.0, "z", open_end="s", tint=green, doors="open")
     container(m, -2.6, 18.0, "z", open_end="n", tint=blue)
     container(m, 6.0, 16.0, "x", open_end="w", tint=grey)
     container(m, 6.0, 16.0, "x", y=2.6, tint=green)
@@ -1005,7 +1133,8 @@ def warehouse():
     # The gatehouse.
     m.room(20.0, -24.0, 26.0, -18.0, "tile", None, height=2.8, lights=1)
     m.wall((20.0, -24.0), (26.0, -24.0), "x", "brick", None, height=2.8, thick=OUTER)
-    m.wall((20.0, -18.0), (26.0, -18.0), "x", "brick", None, height=2.8, thick=OUTER, holes=[(0.6, 2.0, 0.0, DOOR_H), (3.0, 5.0, SILL, HEAD)])
+    m.wall((20.0, -18.0), (26.0, -18.0), "x", "brick", None, height=2.8, thick=OUTER,
+           holes=[(0.6, 2.0, 0.0, DOOR_H, {"name": "gatehouse door", "into": "+"}), (3.0, 5.0, SILL, HEAD)])
     m.wall((20.0, -24.0), (20.0, -18.0), "z", "brick", None, height=2.8, thick=OUTER, holes=[(2.0, 4.0, SILL, HEAD)])
     m.wall((26.0, -24.0), (26.0, -18.0), "z", "brick", None, height=2.8, thick=OUTER)
     m.against("furniture_desk", "n", -23.85, 23.0)
@@ -1043,7 +1172,7 @@ def manor():
     wallpaper = (0.86, 0.80, 0.70)
     panel = (0.62, 0.46, 0.34)
 
-    m.floor(-46, -20, 42, 28, "grass")
+    m.floor(-46, -20, 42, 28, "grass", y=GROUND)
     boundary(m, -46, -20, 42, 28, height=2.6, mat="hedge", tint=(0.8, 1.0, 0.8))
     m.overlay(-1.5, 8.0, 1.5, 26.0, "sand", (0.92, 0.88, 0.78))
     m.overlay(-8.0, 11.0, 8.0, 17.0, "sand", (0.92, 0.88, 0.78))
@@ -1073,25 +1202,54 @@ def manor():
     m.light(0.0, UP + H - 0.8, 1.0, rng=12.0, energy=1.3, colour=(1.0, 0.9, 0.75))
     m.light(0.0, 2.6, 5.0, rng=8.0, energy=0.8, colour=(1.0, 0.9, 0.75))
 
+    # The cupboard under the stair, where the flight is high enough to stand in (z -6 to -3):
+    # its sides follow the steps' undersides, and the way in is a panel of the stair's own
+    # wood at its back, on the hall side, that slides. Low and dark, and only a hider who has
+    # tried every wall knows it is there.
+    steps = int(math.ceil(UP / STEP))
+    for i in range(steps):
+        lo, hi = 2.0 - 8.0 * (i + 1) / steps, 2.0 - 8.0 * i / steps
+        lo, hi = max(lo, -6.0), min(hi, -3.0)
+        if hi - lo <= 0.001:
+            continue
+        under = UP * (i + 1) / steps - 0.3
+        m.span(-1.5, -1.4, 0.0, under, lo, hi, "wood", panel)
+        m.span(1.4, 1.5, 0.0, under, lo, hi, "wood", panel)
+    m.wall((-1.4, -3.0), (1.4, -3.0), "x", "wood", panel, height=2.2)
+    m.wall((-1.5, -6.0), (1.5, -6.0), "x", "wood", panel, height=UP - 0.25,
+           holes=[(0.75, 1.75, 0.0, 2.1, {"name": "panel", "secret": True, "hinge": "end"})])
+    m.prop("furniture_cardboard_box_closed", -0.9, -3.6, 12.0)
+    m.prop("furniture_cardboard_box_open", 0.8, -3.7, -8.0)
+
     for k, y in enumerate((0.0, UP)):
         # Outer walls: stone outside, wallpaper in.
         if k == 0:
-            south = [(2.0, 3.8, SILL, HEAD), (6.5, 8.3, SILL, HEAD), (13.3, 14.7, 0.0, DOOR_H), (19.7, 21.5, SILL, HEAD), (24.2, 26.0, SILL, HEAD)]
-            north = [(3.0, 4.8, SILL, HEAD), (13.3, 14.7, 0.0, DOOR_H), (22.0, 23.8, SILL, HEAD)]
+            south = [(2.0, 3.8, SILL, HEAD), (6.5, 8.3, SILL, HEAD), (13.3, 14.7, 0.0, DOOR_H, {"name": "front door", "into": "-", "open": True, "tint": (0.35, 0.2, 0.15)}),
+                     (19.7, 21.5, SILL, HEAD), (24.2, 26.0, SILL, HEAD)]
+            north = [(3.0, 4.8, SILL, HEAD), (13.3, 14.7, 0.0, DOOR_H, {"name": "garden door", "into": "+"}), (22.0, 23.8, SILL, HEAD)]
         else:
             south = [(2.0, 3.8, SILL, HEAD), (6.5, 8.3, SILL, HEAD), (12.6, 15.4, 1.0, 3.0), (19.7, 21.5, SILL, HEAD), (24.2, 26.0, SILL, HEAD)]
             north = [(3.0, 4.8, SILL, HEAD), (12.6, 15.4, 1.0, 3.0), (22.0, 23.8, SILL, HEAD)]
         m.wall((X0, Z1), (X1, Z1), "x", "stone", None, height=H, y0=y, thick=OUTER, holes=south, inner="paint", inner_tint=wallpaper)
         m.wall((X0, Z0), (X1, Z0), "x", "stone", None, height=H, y0=y, thick=OUTER, holes=north)
-        m.wall((X0, Z0), (X0, Z1), "z", "stone", None, height=H, y0=y, thick=OUTER, holes=[(3.0, 4.8, SILL, HEAD), (12.0, 13.4, 0.0, DOOR_H) if k == 0 else (12.0, 13.8, SILL, HEAD)])
-        m.wall((X1, Z0), (X1, Z1), "z", "stone", None, height=H, y0=y, thick=OUTER, holes=[(3.0, 4.8, SILL, HEAD), (12.0, 13.4, 0.0, DOOR_H) if k == 0 else (12.0, 13.8, SILL, HEAD)])
-        # The wings' inner walls on the hall, with doors, and the walls between rooms.
-        m.wall((-4.0, Z0), (-4.0, Z1), "z", "paint", wallpaper, height=H, y0=y, holes=[(3.0, 4.4, 0.0, DOOR_H), (13.0, 14.4, 0.0, DOOR_H)])
-        m.wall((4.0, Z0), (4.0, Z1), "z", "paint", wallpaper, height=H, y0=y, holes=[(3.0, 4.4, 0.0, DOOR_H), (13.0, 14.4, 0.0, DOOR_H)])
+        side_door = {"name": "side door", "into": "+"}
+        m.wall((X0, Z0), (X0, Z1), "z", "stone", None, height=H, y0=y, thick=OUTER,
+               holes=[(3.0, 4.8, SILL, HEAD), (12.0, 13.4, 0.0, DOOR_H, side_door) if k == 0 else (12.0, 13.8, SILL, HEAD)])
+        m.wall((X1, Z0), (X1, Z1), "z", "stone", None, height=H, y0=y, thick=OUTER,
+               holes=[(3.0, 4.8, SILL, HEAD), (12.0, 13.4, 0.0, DOOR_H, dict(side_door, into="-")) if k == 0 else (12.0, 13.8, SILL, HEAD)])
+        # The wings' inner walls on the hall, with doors, and the walls between rooms. Every
+        # room has a door, and every one of them starts shut.
+        rooms = [["dining room", "library"], ["kitchen", "lounge"]] if k == 0 else [["bedroom", "bedroom"], ["bedroom", "bathroom"]]
+        for wx, names, into in ((-4.0, rooms[0], "-"), (4.0, rooms[1], "+")):
+            m.wall((wx, Z0), (wx, Z1), "z", "paint", wallpaper, height=H, y0=y,
+                   holes=[(3.0, 4.4, 0.0, DOOR_H, {"name": names[0] + " door", "into": into, "tint": panel}),
+                          (13.0, 14.4, 0.0, DOOR_H, {"name": names[1] + " door", "into": into, "tint": panel})])
         # Through-doors between the two ground-floor rooms of each wing; upstairs every room
         # opens on the gallery alone.
-        m.wall((X0, -1.0), (-4.0, -1.0), "x", "paint", wallpaper, height=H, y0=y, holes=[(4.0, 5.4, 0.0, DOOR_H)] if k == 0 else [])
-        m.wall((4.0, -1.0), (X1, -1.0), "x", "paint", wallpaper, height=H, y0=y, holes=[(4.6, 6.0, 0.0, DOOR_H)] if k == 0 else [])
+        # (The lounge's door is at the hall end of its wall: the sofa is against the rest.)
+        through = {"name": "door", "into": "+", "away": False, "tint": panel}
+        m.wall((X0, -1.0), (-4.0, -1.0), "x", "paint", wallpaper, height=H, y0=y, holes=[(4.0, 5.4, 0.0, DOOR_H, through)] if k == 0 else [])
+        m.wall((4.0, -1.0), (X1, -1.0), "x", "paint", wallpaper, height=H, y0=y, holes=[(0.6, 2.0, 0.0, DOOR_H, dict(through, into="-"))] if k == 0 else [])
         for (a, b, c, d) in ((X0, Z0, -4.0, -1.0), (X0, -1.0, -4.0, Z1), (4.0, Z0, X1, -1.0), (4.0, -1.0, X1, Z1)):
             cx, cz = (a + c) / 2, (b + d) / 2
             m.lamp_panel(cx, cz, y + H)
@@ -1147,7 +1305,8 @@ def manor():
     m.floor(gx0, gz0, gx1, gz1, "tile_small", (0.75, 0.72, 0.68), y=0.05, thick=0.05)
     for (a, b, along) in (((gx0, gz0), (gx1, gz0), "x"), ((gx0, gz0), (gx0, gz1), "z"), ((gx1, gz0), (gx1, gz1), "z")):
         m.wall(a, b, along, "glass", None, height=3.0, thick=0.06)
-    m.wall((gx0, gz1), (gx1, gz1), "x", "glass", None, height=3.0, thick=0.06, holes=[(5.3, 6.7, 0.0, DOOR_H)])
+    m.wall((gx0, gz1), (gx1, gz1), "x", "glass", None, height=3.0, thick=0.06,
+           holes=[(5.3, 6.7, 0.0, DOOR_H, {"name": "greenhouse door", "into": "+", "mat": "glass", "tint": (1.0, 1.0, 1.0)})])
     m.span(gx0, gx1, 3.0, 3.06, gz0, gz1, "glass")
     for i, tx in enumerate((22.5, 26.0, 29.5)):
         for tz in (-10.0, -6.5):
@@ -1169,7 +1328,8 @@ def manor():
     m.room(34.0, 12.0, 39.0, 18.0, "wood", (0.6, 0.5, 0.4), height=2.6, ceiling="wood", roof="roof", lights=0)
     m.wall((34.0, 12.0), (39.0, 12.0), "x", "wood", (0.5, 0.38, 0.28), height=2.6, thick=0.12)
     m.wall((34.0, 18.0), (39.0, 18.0), "x", "wood", (0.5, 0.38, 0.28), height=2.6, thick=0.12)
-    m.wall((34.0, 12.0), (34.0, 18.0), "z", "wood", (0.5, 0.38, 0.28), height=2.6, thick=0.12, holes=[(2.0, 3.4, 0.0, DOOR_H)])
+    m.wall((34.0, 12.0), (34.0, 18.0), "z", "wood", (0.5, 0.38, 0.28), height=2.6, thick=0.12,
+           holes=[(2.0, 3.4, 0.0, DOOR_H, {"name": "shed door", "into": "-", "away": False, "tint": (0.42, 0.3, 0.2)})])
     m.wall((39.0, 12.0), (39.0, 18.0), "z", "wood", (0.5, 0.38, 0.28), height=2.6, thick=0.12)
     m.prop("furniture_cardboard_box_closed", 37.8, 13.0, 15.0)
     m.prop("furniture_cardboard_box_open", 38.0, 14.0, -5.0)
@@ -1207,7 +1367,7 @@ def village():
          "ambient": [0.6, 0.64, 0.7], "ambient_energy": 0.45, "fog": 0.0012},
     )
     px0, px1, pz0, pz1 = -40.0, -28.0, 28.0, 40.0
-    m.floor_around(-44, -44, 44, 44, (px0, pz0, px1, pz1), "grass")
+    m.floor_around(-44, -44, 44, 44, (px0, pz0, px1, pz1), "grass", y=GROUND)
     boundary(m, -44, -44, 44, 44, height=2.6, mat="hedge", tint=(0.8, 1.0, 0.8))
 
     # The square, the fountain, the market.
@@ -1233,13 +1393,17 @@ def village():
         z0, z1 = cz - 3.5, cz + 3.5
         tint = [(0.95, 0.92, 0.82), (0.9, 0.82, 0.72), (0.88, 0.9, 0.94), (0.95, 0.88, 0.86), (0.86, 0.92, 0.84), (0.94, 0.94, 0.9)][idx % 6]
         m.room(x0, z0, x1, z1, "wood_floor", None, height=2.8, roof_tint=(0.55, 0.28, 0.22), eave=0.5, lights=1, energy=0.9)
-        front = [(1.0, 2.6, SILL, HEAD), (3.8, 5.2, 0.0, DOOR_H), (6.4, 8.0, SILL, HEAD)]
-        back = [(1.0, 2.4, 0.0, DOOR_H), (6.4, 8.0, SILL, HEAD)]
+        inward = "+" if face == "n" else "-"
+        painted = [(0.3, 0.42, 0.6), (0.55, 0.2, 0.18), (0.25, 0.45, 0.32), (0.85, 0.75, 0.4), (0.3, 0.3, 0.32), (0.5, 0.36, 0.5)][idx % 6]
+        front = [(1.0, 2.6, SILL, HEAD), (3.8, 5.2, 0.0, DOOR_H, {"name": "front door", "into": inward, "tint": painted}), (6.4, 8.0, SILL, HEAD)]
+        # The back door opens out, into the garden: inward, the stove is behind it.
+        back = [(1.0, 2.4, 0.0, DOOR_H, {"name": "back door", "into": inward, "away": False}), (6.4, 8.0, SILL, HEAD)]
         m.wall((x0, z0), (x1, z0), "x", "plaster", tint, height=2.8, thick=OUTER, holes=front if face == "n" else back)
         m.wall((x0, z1), (x1, z1), "x", "plaster", tint, height=2.8, thick=OUTER, holes=front if face == "s" else back)
         m.wall((x0, z0), (x0, z1), "z", "plaster", tint, height=2.8, thick=OUTER, holes=[(2.6, 4.2, SILL, HEAD)])
         m.wall((x1, z0), (x1, z1), "z", "plaster", tint, height=2.8, thick=OUTER, holes=[(2.6, 4.2, SILL, HEAD)])
-        m.wall((cx + 0.5, z0), (cx + 0.5, z1), "z", "paint", (0.95, 0.93, 0.88), height=2.8, holes=[(2.8, 4.2, 0.0, DOOR_H)])
+        m.wall((cx + 0.5, z0), (cx + 0.5, z1), "z", "paint", (0.95, 0.93, 0.88), height=2.8,
+               holes=[(2.8, 4.2, 0.0, DOOR_H, {"name": "bedroom door", "into": "+", "away": False})])
         # Living room and kitchen west of the partition, the bedroom east.
         m.prop("furniture_lounge_sofa", x0 + 1.5, cz, 90.0)
         m.prop("furniture_table_round", cx - 1.4, cz + (1.2 if face == "n" else -1.2))
@@ -1251,7 +1415,8 @@ def village():
         m.prop("furniture_cabinet_bed_drawer", cx + 1.2, cz + (-2.8 if face == "n" else 2.8))
         # The garden behind: a low fence with a gate, a vegetable patch or a woodpile.
         gz0, gz1 = (z1, z1 + 6.0) if face == "n" else (z0 - 6.0, z0)
-        fence(m, x0, gz0, x1, gz1, height=1.1, gaps=[("w", 2.0, 3.4)] if idx % 2 else [("e", 2.0, 3.4)])
+        fence(m, x0, gz0, x1, gz1, height=1.1, gaps=[("w", 2.0, 3.4)] if idx % 2 else [("e", 2.0, 3.4)],
+              skip=("n" if face == "n" else "s",), gate={"name": "garden gate", "into": "+"})
         gm = (gz0 + gz1) / 2
         if idx % 2:
             for i in range(3):
@@ -1270,10 +1435,16 @@ def village():
     m.floor(bx0, bz0, bx1, bz1, "dirt", (0.8, 0.7, 0.55), y=0.02, thick=0.02)
     m.ceiling(bx0, bz0, bx1, bz1, BH, "wood", (0.6, 0.45, 0.3), "roof", (0.5, 0.2, 0.18), 0.4)
     red = (0.62, 0.22, 0.18)
-    m.wall((bx0, bz0), (bx1, bz0), "x", "wood", red, height=BH, thick=OUTER, holes=[(5.0, 6.4, 0.0, DOOR_H)])
-    m.wall((bx0, bz1), (bx1, bz1), "x", "wood", red, height=BH, thick=OUTER, holes=[(9.0, 10.4, 0.0, DOOR_H)])
-    m.wall((bx0, bz0), (bx0, bz1), "z", "wood", red, height=BH, thick=OUTER, holes=[(5.0, 9.0, 0.0, 4.0)])
-    m.wall((bx1, bz0), (bx1, bz1), "z", "wood", red, height=BH, thick=OUTER, holes=[(5.5, 8.5, 3.6, 5.0)])
+    barn_door = {"name": "barn door", "into": "+", "tint": (0.5, 0.18, 0.15)}
+    m.wall((bx0, bz0), (bx1, bz0), "x", "wood", red, height=BH, thick=OUTER, holes=[(5.0, 6.4, 0.0, DOOR_H, dict(barn_door, into="-"))])
+    m.wall((bx0, bz1), (bx1, bz1), "x", "wood", red, height=BH, thick=OUTER, holes=[(9.0, 10.4, 0.0, DOOR_H, barn_door)])
+    # The big doors on the square, a pair of leaves that swing out and stand open; and the
+    # hayloft's pair, which swing out over a three-metre drop.
+    leaf = {"leaves": 2, "away": False, "mat": "wood", "tint": (0.5, 0.18, 0.15)}
+    m.wall((bx0, bz0), (bx0, bz1), "z", "wood", red, height=BH, thick=OUTER,
+           holes=[(5.0, 9.0, 0.0, 4.0, dict(leaf, name="barn door", into="-", open=True))])
+    m.wall((bx1, bz0), (bx1, bz1), "z", "wood", red, height=BH, thick=OUTER,
+           holes=[(5.5, 8.5, 3.6, 5.0, dict(leaf, name="hayloft door", into="+"))])
     LY = 3.0
     m.span(27.0, bx1 - 0.15, LY - 0.2, LY, bz0 + 0.15, bz1 - 0.15, "wood", (0.7, 0.55, 0.38))
     for pz in (-5.0, 0.0, 5.0):
@@ -1297,17 +1468,30 @@ def village():
     # The meeting hall, north: rows of benches and a stage.
     hx0, hx1, hz0, hz1 = -8.0, 8.0, 26.0, 36.0
     m.room(hx0, hz0, hx1, hz1, "parquet", None, height=4.0, roof_tint=(0.35, 0.35, 0.4), lights=2, energy=1.0)
-    m.wall((hx0, hz0), (hx1, hz0), "x", "stone", None, height=4.0, thick=OUTER, holes=[(2.0, 3.8, 1.0, 3.0), (7.3, 8.7, 0.0, DOOR_H), (12.2, 14.0, 1.0, 3.0)])
-    m.wall((hx0, hz1), (hx1, hz1), "x", "stone", None, height=4.0, thick=OUTER, holes=[(1.0, 2.4, 0.0, DOOR_H)])
+    m.wall((hx0, hz0), (hx1, hz0), "x", "stone", None, height=4.0, thick=OUTER,
+           holes=[(2.0, 3.8, 1.0, 3.0), (7.3, 8.7, 0.0, DOOR_H, {"name": "hall door", "into": "+", "open": True, "tint": (0.3, 0.22, 0.18)}), (12.2, 14.0, 1.0, 3.0)])
+    m.wall((hx0, hz1), (hx1, hz1), "x", "stone", None, height=4.0, thick=OUTER,
+           holes=[(1.0, 2.4, 0.0, DOOR_H, {"name": "vestry door", "into": "+", "away": False})])
     m.wall((hx0, hz0), (hx0, hz1), "z", "stone", None, height=4.0, thick=OUTER, holes=[(3.0, 5.0, 1.0, 3.0)])
     m.wall((hx1, hz0), (hx1, hz1), "z", "stone", None, height=4.0, thick=OUTER, holes=[(3.0, 5.0, 1.0, 3.0)])
-    m.span(-6.0, 6.0, 0.0, 0.6, 32.6, hz1 - 0.15, "wood", (0.55, 0.4, 0.3))
+    # The stage is hollow: a crawl space under its boards, behind a panel of its front that
+    # slides. Steps up either end.
+    stage = (0.55, 0.4, 0.3)
+    SH = 1.2
+    m.span(-6.0, 6.0, SH - 0.1, SH, 32.6, hz1 - 0.15, "wood", stage)
+    m.wall((-6.0, 32.7), (6.0, 32.7), "x", "wood", stage, height=SH - 0.1,
+           holes=[(5.0, 6.2, 0.0, 1.05, {"name": "loose board", "secret": True, "hinge": "start"})])
+    m.span(-6.0, -5.8, 0.0, SH - 0.1, 32.8, hz1 - 0.15, "wood", stage)
+    m.span(5.8, 6.0, 0.0, SH - 0.1, 32.8, hz1 - 0.15, "wood", stage)
+    flight(m, 6.0, 7.4, 33.2, 35.4, 0.0, SH, "w", "wood", stage, thick=0.2)
+    flight(m, -7.4, -6.0, 33.2, 35.4, 0.0, SH, "e", "wood", stage, thick=0.2)
     for row in range(4):
         for bx in (-4.5, -2.5, 2.5, 4.5):
             m.prop("furniture_bench", bx, 28.0 + row * 1.1, 180.0)
-    m.prop("furniture_speaker", -5.4, 34.5, y=0.6)
-    m.prop("furniture_speaker", 5.4, 34.5, y=0.6)
-    m.prop("furniture_desk", 0.0, 34.0, 180.0, y=0.6)
+    m.prop("furniture_speaker", -5.4, 34.5, y=1.2)
+    m.prop("furniture_speaker", 5.4, 34.5, y=1.2)
+    m.prop("furniture_desk", 0.0, 34.0, 180.0, y=1.2)
+    m.prop("furniture_cardboard_box_closed", 3.6, 35.0, 20.0)
 
     # The pond, north-west (its hole is left out of the field), with a bridge over it high
     # enough to crouch under in the shallows, and a step out at one corner.
@@ -1362,7 +1546,7 @@ def park():
          "ambient": [0.62, 0.66, 0.72], "ambient_energy": 0.42, "fog": 0.0015},
     )
     # The field, with the pond left out of it.
-    m.floor_around(-46, -42, 46, 42, (10.0, 18.0, 30.0, 32.0), "grass")
+    m.floor_around(-46, -42, 46, 42, (10.0, 18.0, 30.0, 32.0), "grass", y=GROUND)
     boundary(m, -46, -42, 46, 42, height=2.6, mat="hedge", tint=(0.8, 1.0, 0.8))
     for (a, b, c, d) in ((-40, -1, -14, 1), (12, -1, 40, 1), (-1, -36, 1, -12), (-1, 9, 1, 36), (14, 1, 16, 16)):
         m.overlay(a, b, c, d, "dirt", (0.8, 0.72, 0.6))
@@ -1424,11 +1608,16 @@ def park():
     # The toilets, north-east.
     tx0, tx1, tz0, tz1 = 30.0, 40.0, 12.0, 20.0
     m.room(tx0, tz0, tx1, tz1, "tile_small", None, height=2.8, lights=2, energy=1.0)
-    m.wall((tx0, tz0), (tx1, tz0), "x", "brick", None, height=2.8, thick=OUTER, holes=[(1.0, 2.4, 0.0, DOOR_H), (7.6, 9.0, 0.0, DOOR_H)])
+    m.wall((tx0, tz0), (tx1, tz0), "x", "brick", None, height=2.8, thick=OUTER,
+           holes=[(1.0, 2.4, 0.0, DOOR_H, {"name": "toilet door", "into": "+", "tint": (0.3, 0.45, 0.6)}),
+                  (7.6, 9.0, 0.0, DOOR_H, {"name": "toilet door", "into": "+", "tint": (0.6, 0.3, 0.4)})])
     m.wall((tx0, tz1), (tx1, tz1), "x", "brick", None, height=2.8, thick=OUTER)
     m.wall((tx0, tz0), (tx0, tz1), "z", "brick", None, height=2.8, thick=OUTER)
     m.wall((tx1, tz0), (tx1, tz1), "z", "brick", None, height=2.8, thick=OUTER)
-    m.wall((35.0, tz0), (35.0, tz1), "z", "tile", None, height=2.8)
+    # Between the two sides, by the doors, a panel of tiles that slides: the one way from one
+    # to the other that is not outside.
+    m.wall((35.0, tz0), (35.0, tz1), "z", "tile", None, height=2.8,
+           holes=[(0.4, 1.4, 0.0, 2.0, {"name": "loose tiles", "secret": True, "hinge": "end"})])
     bathroom(m, tx0 + 0.15, tz0 + 2.0, 34.9, tz1 - 0.15, stalls=3)
     bathroom(m, 35.1, tz0 + 2.0, tx1 - 0.15, tz1 - 0.15, stalls=3)
 
@@ -1439,7 +1628,8 @@ def park():
                          (cx1 - 1.1, cz0 + 1, cx1 - 1, cz1 - 1), (-30.05, cz0 + 1, -29.95, cz1 - 1)):
         m.overlay(a, b, c, d, "line")
     m.span(-30.05, -29.95, 0.0, 1.0, cz0 + 0.5, cz1 - 0.5, "fabric", (0.15, 0.15, 0.15))
-    fence(m, cx0, cz0, cx1, cz1, height=3.0, mat="metal", tint=(0.4, 0.42, 0.45), gaps=[("e", 7.0, 9.0)])
+    fence(m, cx0, cz0, cx1, cz1, height=3.0, mat="metal", tint=(0.4, 0.42, 0.45), gaps=[("e", 7.0, 9.0)],
+          gate={"name": "court gate", "into": "+", "leaves": 2, "open": True})
     m.prop("furniture_bench", -18.6, -30.0, -90.0)
     m.prop("furniture_cardboard_box_open", -18.6, -32.0, 10.0)
 
@@ -1459,8 +1649,11 @@ def park():
     rx0, rx1, rz0, rz1 = -38.0, -28.0, 14.0, 22.0
     m.room(rx0, rz0, rx1, rz1, "wood_floor", None, height=2.8, ceiling="wood", roof="roof", roof_tint=(0.35, 0.28, 0.22), lights=1)
     logs = (0.55, 0.38, 0.24)
-    m.wall((rx0, rz0), (rx1, rz0), "x", "wood", logs, height=2.8, thick=OUTER, holes=[(4.3, 5.7, 0.0, DOOR_H), (1.0, 2.6, SILL, HEAD), (7.4, 9.0, SILL, HEAD)])
-    m.wall((rx0, rz1), (rx1, rz1), "x", "wood", logs, height=2.8, thick=OUTER, holes=[(2.0, 3.4, 0.0, DOOR_H)])
+    # The front door opens in: out, it would scrape the porch.
+    m.wall((rx0, rz0), (rx1, rz0), "x", "wood", logs, height=2.8, thick=OUTER,
+           holes=[(4.3, 5.7, 0.0, DOOR_H, {"name": "cabin door", "into": "+", "away": False}), (1.0, 2.6, SILL, HEAD), (7.4, 9.0, SILL, HEAD)])
+    m.wall((rx0, rz1), (rx1, rz1), "x", "wood", logs, height=2.8, thick=OUTER,
+           holes=[(2.0, 3.4, 0.0, DOOR_H, {"name": "back door", "into": "-"})])
     m.wall((rx0, rz0), (rx0, rz1), "z", "wood", logs, height=2.8, thick=OUTER, holes=[(3.0, 4.6, SILL, HEAD)])
     m.wall((rx1, rz0), (rx1, rz1), "z", "wood", logs, height=2.8, thick=OUTER, holes=[(3.0, 4.6, SILL, HEAD)])
     m.span(rx0, rx1, 0.0, 0.3, rz0 - 2.4, rz0, "wood", (0.6, 0.45, 0.3))
@@ -1514,7 +1707,7 @@ def write_all(check):
             continue
         with open(path, "w") as f:
             f.write(text)
-        print("%-14s %5d boxes %5d props %3d lights  %s" % (mid, len(doc["boxes"]), len(doc["props"]), len(doc["lights"]), doc["name"]))
+        print("%-14s %5d boxes %5d props %3d lights %3d doors  %s" % (mid, len(doc["boxes"]), len(doc["props"]), len(doc["lights"]), len(doc["doors"]), doc["name"]))
     if check:
         if stale:
             print("stale: %s (run tools/build_maps.py)" % ", ".join(stale))

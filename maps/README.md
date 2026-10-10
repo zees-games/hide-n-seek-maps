@@ -27,6 +27,7 @@ Every length is metres, every angle degrees, every time seconds. A position is `
 	"boxes": [],
 	"props": [],
 	"lights": [],
+	"doors": [],
 	"spawns": {"hiders": [], "seekers": []}
 }
 ```
@@ -71,6 +72,26 @@ The furniture, the plants, the rocks: everything a hider gets behind, under or o
 
 An omni light. Indoors, one per room of about eight by eight metres, just under the ceiling. Browsers draw at most eight lights on any one surface, so a big room wants a few strong lights more than many weak ones.
 
+## Doors
+
+Panels a player opens and shuts with the use key (E): a room's door, a cupboard, a gate, a container's pair, a roller shutter, a panel of wall that slides. A shut door is a wall: it stops a body, a seeker's view and a touch. A door is the one thing in a map that moves, and it moves the same on the server and on every client.
+
+```json
+{"at": [0, 1.15, -1], "size": [1.37, 2.28, 0.06], "yaw": 0, "motion": "swing", "hinge": "left", "angle": 100,
+ "away": true, "open": false, "seconds": 0.6, "travel": 0, "mat": "wood", "tint": [0.55, 0.4, 0.28], "name": "bedroom door", "secret": false}
+```
+
+- `at` is the middle of the panel **shut**, and `size` its width, height and thickness, turned by `yaw` like a box. Make it a little smaller than the hole it fills: a centimetre or two round a door, a few millimetres round a secret one.
+- `motion` is `swing` (about a hinge at one edge), `slide` (sideways along the wall, into it) or `lift` (straight up, a shutter).
+- `hinge` is the edge it swings from, or the way it slides: `left` is the panel's own -x, which with `yaw` 0 is the smaller x and with `yaw` 90 the larger z.
+- `angle` is how far a swing opens, in degrees; its sign is the side it opens to. With `away` (the default) the game swings it away from whoever opens it instead, so a door can be opened from either side; set `"away": false` for a door that must only ever go one way (into a room because a sofa is on the other side, out of a stall because the toilet is in).
+- `open` is how it stands at the start of every round. `seconds` is how long it takes, and `travel` how far a slide or a lift goes in metres (0 is its whole width or height: a shutter in a tall wall wants less, or it comes out through the roof).
+- `name` is what the prompt says: "E  Open the bedroom door".
+- `"secret": true` draws no handle. Give it the wall's own `mat` and `tint`, make it nearly the wall's thickness, and slide it: it reads as wall until somebody tries it.
+- A door never opens or shuts into anybody: the use is refused while a body stands anywhere it will pass through.
+
+`headless_maps` swings every door both ways it can go and fails one that passes through a wall or a prop, and walks a ray through every doorway with its door open and fails one with something standing in it. In the builder, a door is a hole in a wall with a fifth element: `(3.0, 4.4, 0.0, DOOR_H, {"name": "bedroom door"})`.
+
 ## Spawns
 
 ```json
@@ -87,7 +108,8 @@ An omni light. Indoors, one per room of about eight by eight metres, just under 
 From game-hide-n-seek:
 
 ```bash
-./game.sh test headless_maps                                   # every map: wire size, props, spawns, nothing floating
+./game.sh test headless_maps                                   # every map: wire size, props, spawns, nothing floating, doors
+tools/shot.sh --view=room --doors=open --hs-map-ids=hs_my_map --at=0,1.7,0 --look=5,1,5   # with every door open
 tools/shot.sh --view=overview --hs-map-ids=hs_my_map           # look at it from above
 tools/shot.sh --view=room --hs-map-ids=hs_my_map --at=0,1.7,0 --look=5,1,5
 ```

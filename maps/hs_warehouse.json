@@ -42,7 +42,7 @@
   {
    "at": [
     -3.0,
-    -0.1,
+    -0.12,
     0.0
    ],
    "size": [
@@ -6757,6 +6757,528 @@
     0.95,
     0.85
    ]
+  }
+ ],
+ "doors": [
+  {
+   "at": [
+    -14.0,
+    2.25,
+    10.0
+   ],
+   "size": [
+    3.97,
+    4.482,
+    0.06
+   ],
+   "motion": "lift",
+   "hinge": "left",
+   "mat": "metal",
+   "tint": [
+    0.5,
+    0.52,
+    0.5
+   ],
+   "name": "loading bay shutter",
+   "open": true,
+   "seconds": 1.6,
+   "travel": 3.3
+  },
+  {
+   "at": [
+    -4.0,
+    2.25,
+    10.0
+   ],
+   "size": [
+    3.97,
+    4.482,
+    0.06
+   ],
+   "motion": "lift",
+   "hinge": "left",
+   "mat": "metal",
+   "tint": [
+    0.5,
+    0.52,
+    0.5
+   ],
+   "name": "loading bay shutter",
+   "seconds": 1.6,
+   "travel": 3.3
+  },
+  {
+   "at": [
+    8.7,
+    1.15,
+    10.0
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "metal",
+   "angle": -100.0,
+   "tint": [
+    0.3,
+    0.4,
+    0.55
+   ],
+   "name": "side door"
+  },
+  {
+   "at": [
+    14.0,
+    1.15,
+    -7.3
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "right",
+   "mat": "metal",
+   "yaw": 90.0,
+   "angle": 100.0,
+   "away": false,
+   "tint": [
+    0.5,
+    0.15,
+    0.12
+   ],
+   "name": "fire door"
+  },
+  {
+   "at": [
+    8.9,
+    4.75,
+    -9.0
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "wood",
+   "angle": 100.0,
+   "away": false,
+   "tint": [
+    0.55,
+    0.4,
+    0.28
+   ],
+   "name": "office door"
+  },
+  {
+   "at": [
+    -24.05,
+    1.325,
+    14.65
+   ],
+   "size": [
+    1.07,
+    2.332,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "right",
+   "mat": "metal",
+   "yaw": 90.0,
+   "angle": 100.0,
+   "away": false,
+   "tint": [
+    0.144,
+    0.256,
+    0.48
+   ],
+   "name": "container door",
+   "open": true
+  },
+  {
+   "at": [
+    -24.05,
+    1.325,
+    15.75
+   ],
+   "size": [
+    1.07,
+    2.332,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "metal",
+   "yaw": 90.0,
+   "angle": -100.0,
+   "away": false,
+   "tint": [
+    0.144,
+    0.256,
+    0.48
+   ],
+   "name": "container door",
+   "open": true
+  },
+  {
+   "at": [
+    -24.05,
+    1.325,
+    17.65
+   ],
+   "size": [
+    1.07,
+    2.332,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "right",
+   "mat": "metal",
+   "yaw": 90.0,
+   "angle": 100.0,
+   "away": false,
+   "tint": [
+    0.16,
+    0.36,
+    0.24
+   ],
+   "name": "container door"
+  },
+  {
+   "at": [
+    -24.05,
+    1.325,
+    18.75
+   ],
+   "size": [
+    1.07,
+    2.332,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "metal",
+   "yaw": 90.0,
+   "angle": -100.0,
+   "away": false,
+   "tint": [
+    0.16,
+    0.36,
+    0.24
+   ],
+   "name": "container door"
+  },
+  {
+   "at": [
+    -19.95,
+    1.325,
+    20.65
+   ],
+   "size": [
+    1.07,
+    2.332,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "right",
+   "mat": "metal",
+   "yaw": 90.0,
+   "angle": -100.0,
+   "away": false,
+   "tint": [
+    0.496,
+    0.176,
+    0.144
+   ],
+   "name": "container door"
+  },
+  {
+   "at": [
+    -19.95,
+    1.325,
+    21.75
+   ],
+   "size": [
+    1.07,
+    2.332,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "metal",
+   "yaw": 90.0,
+   "angle": 100.0,
+   "away": false,
+   "tint": [
+    0.496,
+    0.176,
+    0.144
+   ],
+   "name": "container door"
+  },
+  {
+   "at": [
+    -5.35,
+    1.325,
+    23.95
+   ],
+   "size": [
+    1.07,
+    2.332,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "metal",
+   "angle": -100.0,
+   "away": false,
+   "tint": [
+    0.16,
+    0.36,
+    0.24
+   ],
+   "name": "container door",
+   "open": true
+  },
+  {
+   "at": [
+    -4.25,
+    1.325,
+    23.95
+   ],
+   "size": [
+    1.07,
+    2.332,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "right",
+   "mat": "metal",
+   "angle": 100.0,
+   "away": false,
+   "tint": [
+    0.16,
+    0.36,
+    0.24
+   ],
+   "name": "container door",
+   "open": true
+  },
+  {
+   "at": [
+    -1.95,
+    1.325,
+    18.05
+   ],
+   "size": [
+    1.07,
+    2.332,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "metal",
+   "angle": 100.0,
+   "away": false,
+   "tint": [
+    0.144,
+    0.256,
+    0.48
+   ],
+   "name": "container door"
+  },
+  {
+   "at": [
+    -0.85,
+    1.325,
+    18.05
+   ],
+   "size": [
+    1.07,
+    2.332,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "right",
+   "mat": "metal",
+   "angle": -100.0,
+   "away": false,
+   "tint": [
+    0.144,
+    0.256,
+    0.48
+   ],
+   "name": "container door"
+  },
+  {
+   "at": [
+    6.05,
+    1.325,
+    16.65
+   ],
+   "size": [
+    1.07,
+    2.332,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "right",
+   "mat": "metal",
+   "yaw": 90.0,
+   "angle": -100.0,
+   "away": false,
+   "tint": [
+    0.4,
+    0.4,
+    0.416
+   ],
+   "name": "container door"
+  },
+  {
+   "at": [
+    6.05,
+    1.325,
+    17.75
+   ],
+   "size": [
+    1.07,
+    2.332,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "metal",
+   "yaw": 90.0,
+   "angle": 100.0,
+   "away": false,
+   "tint": [
+    0.4,
+    0.4,
+    0.416
+   ],
+   "name": "container door"
+  },
+  {
+   "at": [
+    11.95,
+    1.325,
+    22.65
+   ],
+   "size": [
+    1.07,
+    2.332,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "right",
+   "mat": "metal",
+   "yaw": 90.0,
+   "angle": 100.0,
+   "away": false,
+   "tint": [
+    0.496,
+    0.176,
+    0.144
+   ],
+   "name": "container door"
+  },
+  {
+   "at": [
+    11.95,
+    1.325,
+    23.75
+   ],
+   "size": [
+    1.07,
+    2.332,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "metal",
+   "yaw": 90.0,
+   "angle": -100.0,
+   "away": false,
+   "tint": [
+    0.496,
+    0.176,
+    0.144
+   ],
+   "name": "container door"
+  },
+  {
+   "at": [
+    16.65,
+    1.325,
+    18.95
+   ],
+   "size": [
+    1.07,
+    2.332,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "metal",
+   "angle": -100.0,
+   "away": false,
+   "tint": [
+    0.144,
+    0.256,
+    0.48
+   ],
+   "name": "container door"
+  },
+  {
+   "at": [
+    17.75,
+    1.325,
+    18.95
+   ],
+   "size": [
+    1.07,
+    2.332,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "right",
+   "mat": "metal",
+   "angle": 100.0,
+   "away": false,
+   "tint": [
+    0.144,
+    0.256,
+    0.48
+   ],
+   "name": "container door"
+  },
+  {
+   "at": [
+    21.3,
+    1.15,
+    -18.0
+   ],
+   "size": [
+    1.37,
+    2.282,
+    0.06
+   ],
+   "motion": "swing",
+   "hinge": "left",
+   "mat": "wood",
+   "angle": -100.0,
+   "tint": [
+    0.55,
+    0.4,
+    0.28
+   ],
+   "name": "gatehouse door"
   }
  ],
  "spawns": {
