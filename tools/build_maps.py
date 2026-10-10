@@ -3130,6 +3130,255 @@ def camp():
     return m.build()
 
 
+def museum():
+    """Halden Museum: two tall storeys round a rotunda with a skylight and a whale's skeleton
+    hung in it, grand stairs either side of the entrance hall, and a gallery off every side.
+
+    A museum is rooms full of things people are told not to touch, which is to say things to
+    hide behind, under and inside: the dinosaur's ribs stand high enough to crouch under, the
+    pyramid has a crawl tunnel through its base, the art gallery is a maze of partitions, the
+    space capsule has a door. The two grand stairs and the rotunda's ring on both floors are
+    the way round. The library's vault is behind a panel of its wall."""
+    m = Map(
+        "hs_museum", "Halden Museum",
+        "Two floors of galleries round a rotunda: a dinosaur, a pyramid, a rocket, a maze of paintings, and a vault.",
+        {"sky_top": [0.34, 0.5, 0.78], "sky_horizon": [0.82, 0.84, 0.88], "ground": [0.32, 0.32, 0.3],
+         "sun_pitch": -52, "sun_yaw": 130, "sun_energy": 1.0, "sun_colour": [1.0, 0.96, 0.9],
+         "ambient": [0.64, 0.64, 0.68], "ambient_energy": 0.52, "fog": 0.001},
+        kill_y=-10.0,
+    )
+    X0, X1, Z0, Z1 = -30.0, 30.0, -20.0, 20.0
+    H = 5.0
+    TOP = 2 * H
+    stone = (0.86, 0.84, 0.78)
+    cream = (0.94, 0.92, 0.86)
+    oak = (0.5, 0.36, 0.24)
+    glass = {"mat": "glass", "tint": (1.0, 1.0, 1.0)}
+    staff = {"mat": "metal", "tint": (0.45, 0.48, 0.52), "away": False}
+
+    m.floor(-48, -40, 48, 52, "sidewalk", (0.85, 0.84, 0.8), y=GROUND)
+    boundary(m, -48, -40, 48, 52, height=2.4, mat="hedge", tint=(0.75, 0.9, 0.75))
+
+    # --- Shell ----------------------------------------------------------------------------
+    atrium = (-6.0, -6.0, 6.0, 6.0)
+    stairs = [(-8.0, 8.0, -6.0, 18.0), (6.0, 8.0, 8.0, 18.0)]
+    m.floor(X0, Z0, X1, Z1, "parquet")
+    slab(m, X0, Z0, X1, Z1, H, [atrium] + stairs, "parquet", (0.85, 0.8, 0.72))
+    slab(m, X0, Z0, X1, Z1, TOP + 0.1, [atrium], "ceiling", None, thick=0.1)
+    slab(m, X0 - 0.4, Z0 - 0.4, X1 + 0.4, Z1 + 0.4, TOP + 0.4, [atrium], "roof", (0.4, 0.42, 0.45), thick=0.3)
+    m.span(atrium[0], atrium[2], TOP + 0.1, TOP + 0.15, atrium[1], atrium[3], "glass")
+    for x in frange(-6.0, 6.1, 3.0):
+        m.span(x - 0.08, x + 0.08, TOP + 0.15, TOP + 0.4, -6.0, 6.0, "metal", (0.5, 0.52, 0.55))
+    for k, y in enumerate((0.0, H)):
+        windows = [(x, x + 2.0, 1.2, 3.8) for x in (4.0, 12.0, 46.0, 54.0)]
+        south = list(windows)
+        if k == 0:
+            south.append((27.2, 32.8, 0.0, 3.4, {"name": "main doors", "leaves": 2, "into": "-", "away": False, "open": True, "angle": 85.0, **glass}))
+        m.wall((X0, Z1), (X1, Z1), "x", "stone", stone, height=H, y0=y, thick=OUTER, holes=south, inner="paint", inner_tint=cream)
+        north = [(x, x + 2.0, 1.2, 3.8) for x in (4.0, 12.0, 46.0, 54.0)]
+        if k == 0:
+            north.append((32.0, 36.0, 0.0, 3.2, {"name": "loading shutter", "motion": "lift", "travel": 1.7, "mat": "metal", "tint": (0.55, 0.57, 0.6), "seconds": 1.4}))
+        m.wall((X0, Z0), (X1, Z0), "x", "stone", stone, height=H, y0=y, thick=OUTER, holes=north, inner="paint", inner_tint=cream)
+        m.wall((X0, Z0), (X0, Z1), "z", "stone", stone, height=H, y0=y, thick=OUTER, holes=[(8.0, 10.0, 1.2, 3.8), (30.0, 32.0, 1.2, 3.8)], inner="paint", inner_tint=cream)
+        m.wall((X1, Z0), (X1, Z1), "z", "stone", stone, height=H, y0=y, thick=OUTER, holes=[(8.0, 10.0, 1.2, 3.8), (30.0, 32.0, 1.2, 3.8)], inner="paint", inner_tint=cream)
+        # The wings' walls on the central hall, wide arches into each gallery.
+        for wx in (-8.0, 8.0):
+            m.wall((wx, Z0), (wx, Z1), "z", "paint", cream, height=H, y0=y,
+                   holes=[(12.0, 16.0, 0.0, 3.6), (25.0, 29.0, 0.0, 3.6)])
+        # The galleries' dividing walls.
+        for zz in (2.0,):
+            m.wall((X0, zz), (-8.0, zz), "x", "paint", cream, height=H, y0=y, holes=[(10.0, 13.0, 0.0, 3.6)])
+            m.wall((8.0, zz), (X1, zz), "x", "paint", cream, height=H, y0=y, holes=[(9.0, 12.0, 0.0, 3.6)])
+        # The north block behind the rotunda: staff rooms below, the conservation lab above.
+        m.wall((-8.0, -10.0), (8.0, -10.0), "x", "paint", cream, height=H, y0=y,
+               holes=[(2.0, 3.4, 0.0, DOOR_H, dict(staff, name="staff door" if k == 0 else "lab door", into="-")),
+                      (12.6, 14.0, 0.0, DOOR_H, dict(staff, name="store door" if k == 0 else "lab door", into="-"))])
+        if k == 0:
+            m.wall((0.0, Z0), (0.0, -10.0), "z", "paint", cream, height=H, y0=y)
+        for (a, b, c, d) in ((X0, Z0, -8.0, 2.0), (X0, 2.0, -8.0, Z1), (8.0, Z0, X1, 2.0), (8.0, 2.0, X1, Z1), (-8.0, Z0, 8.0, -10.0)):
+            lights_over(m, a, b, c, d, y + H - 0.2, energy=1.0)
+        for (lx, lz) in ((-7.0, 0.0), (7.0, 0.0), (0.0, -8.0), (0.0, 7.0), (0.0, 14.0)):
+            m.light(lx, y + H - 0.6, lz, rng=9.0, energy=0.8)
+
+    # The grand stairs, the rails round the rotunda and the stair holes.
+    for (a, b, c, d) in stairs:
+        flight(m, a, c, b, d, 0.0, H, "n", "stone", stone, thick=0.3)
+    railing(m, -6.0, 8.0, -6.0, 18.0, H, height=1.1, mat="metal", tint=(0.7, 0.6, 0.3))
+    railing(m, 6.0, 8.0, 6.0, 18.0, H, height=1.1, mat="metal", tint=(0.7, 0.6, 0.3))
+    railing(m, -8.0, 18.0, -6.0, 18.0, H, height=1.1, mat="metal", tint=(0.7, 0.6, 0.3))
+    railing(m, 6.0, 18.0, 8.0, 18.0, H, height=1.1, mat="metal", tint=(0.7, 0.6, 0.3))
+    for (a, b, c, d) in ((-6.0, -6.0, 6.0, -6.0), (-6.0, 6.0, 6.0, 6.0), (-6.0, -6.0, -6.0, 6.0), (6.0, -6.0, 6.0, 6.0)):
+        railing(m, a, b, c, d, H, height=1.1, mat="metal", tint=(0.7, 0.6, 0.3))
+    # The rotunda: a globe on a plinth, and the whale hung over it.
+    m.span(-1.6, 1.6, 0.0, 0.8, -1.6, 1.6, "stone", stone)
+    m.span(-1.2, 1.2, 0.8, 3.0, -1.2, 1.2, "metal", (0.3, 0.45, 0.6))
+    m.span(-5.0, 5.0, 6.6, 7.0, -0.25, 0.25, "plaster", (0.95, 0.93, 0.88))
+    for x in frange(-3.6, 3.7, 0.9):
+        m.span(x - 0.08, x + 0.08, 5.8, 7.0, -1.0, -0.85, "plaster", (0.95, 0.93, 0.88))
+        m.span(x - 0.08, x + 0.08, 5.8, 7.0, 0.85, 1.0, "plaster", (0.95, 0.93, 0.88))
+    m.span(4.6, 5.8, 6.4, 7.2, -0.5, 0.5, "plaster", (0.95, 0.93, 0.88))
+    for (bx, bz) in ((-4.0, 10.0), (4.0, 10.0)):
+        m.prop("furniture_bench_cushion", bx, bz, 0.0)
+    m.prop("furniture_desk", 0.0, 12.0, 0.0)
+    m.prop("furniture_chair_desk", 0.0, 11.2, 180.0)
+
+    # --- Ground floor ---------------------------------------------------------------------
+    # The dinosaur hall: a skeleton on a plinth, its ribs high enough to crouch under.
+    m.span(-26.0, -12.0, 0.0, 0.3, -16.0, -6.0, "stone", stone)
+    bone = (0.92, 0.88, 0.78)
+    m.span(-24.0, -14.0, 3.0, 3.3, -11.2, -10.8, "plaster", bone)
+    for x in frange(-22.0, -15.9, 1.0):
+        m.span(x - 0.08, x + 0.08, 1.4, 3.0, -12.4, -12.25, "plaster", bone)
+        m.span(x - 0.08, x + 0.08, 1.4, 3.0, -9.75, -9.6, "plaster", bone)
+        m.span(x - 0.08, x + 0.08, 1.3, 1.4, -12.4, -9.6, "plaster", bone)
+    for (lx_, lz_) in ((-21.5, -12.0), (-21.5, -10.0), (-16.5, -12.0), (-16.5, -10.0)):
+        m.span(lx_ - 0.15, lx_ + 0.15, 0.3, 3.0, lz_ - 0.15, lz_ + 0.15, "plaster", bone)
+    m.span(-27.0, -24.0, 2.6, 3.6, -11.6, -10.4, "plaster", bone)
+    m.span(-14.0, -11.0, 2.6, 2.9, -11.1, -10.9, "plaster", bone)
+    for (a, b, c, d) in ((-26.0, -16.0, -12.0, -16.0), (-26.0, -6.0, -12.0, -6.0), (-26.0, -16.0, -26.0, -6.0), (-12.0, -16.0, -12.0, -6.0)):
+        railing(m, a, b, c, d, 0.3, height=0.6, mat="fabric", tint=(0.6, 0.15, 0.2))
+    for (cx, cz) in ((-28.0, -2.0), (-24.0, -2.0), (-20.0, -2.0)):
+        m.span(cx - 0.8, cx + 0.8, 0.0, 1.0, cz - 0.5, cz + 0.5, "wood", oak)
+        m.span(cx - 0.75, cx + 0.75, 1.0, 1.8, cz - 0.45, cz + 0.45, "glass")
+    # The cafe and the gift shop.
+    for (tx, tz) in ((-27.0, 6.0), (-27.0, 10.0), (-23.0, 6.0), (-23.0, 10.0), (-27.0, 14.0)):
+        m.prop("furniture_table_round", tx, tz)
+        m.prop("furniture_chair_rounded", tx - 0.8, tz, 90.0)
+        m.prop("furniture_chair_rounded", tx + 0.8, tz, -90.0)
+    for i in range(4):
+        bar = m.prop("furniture_kitchen_bar", -20.5, 13.0 + i, 90.0)
+    m.on("furniture_kitchen_coffee_machine", bar)
+    m.against("furniture_kitchen_fridge", "s", Z1 - 0.3, -19.5)
+    m.wall((-18.0, 2.0), (-18.0, Z1), "z", "paint", cream, height=H, holes=[(6.0, 8.0, 0.0, 2.6)])
+    for (sx_, sz_) in ((-15.5, 6.0), (-12.5, 6.0), (-15.5, 10.0), (-12.5, 10.0)):
+        m.prop("furniture_bookcase_open", sx_, sz_, 0.0)
+    for i in range(3):
+        m.prop("furniture_kitchen_bar", -11.0 + 0.0, 15.0 + i, -90.0)
+    m.prop("furniture_bear", -16.0, 17.0, 160.0)
+    m.prop("furniture_cardboard_box_closed", -17.2, 18.6, 20.0)
+    # The Egyptian room: a stepped pyramid with a crawl tunnel through its base, sarcophagi,
+    # statues, and a tomb with a door.
+    sand = (0.86, 0.76, 0.56)
+    for i, (h0, h1) in enumerate(((0.0, 1.2), (1.2, 2.2), (2.2, 3.0), (3.0, 3.6))):
+        r_ = 5.0 - i * 1.2
+        if i == 0:
+            for (a, b, c, d) in ((19.0 - r_, -11.0 - r_, 19.0 + r_, -11.75), (19.0 - r_, -10.25, 19.0 + r_, -11.0 + r_)):
+                m.span(a, c, h0, h1, b, d, "sand", sand)
+            m.span(19.0 - r_, 19.0 + r_, CRAWL_H, h1, -11.75, -10.25, "sand", sand)
+        else:
+            m.span(19.0 - r_, 19.0 + r_, h0, h1, -11.0 - r_, -11.0 + r_, "sand", sand)
+    for (sx_, sz_) in ((11.0, -18.0), (11.0, -4.0)):
+        m.span(sx_ - 1.0, sx_ + 1.0, 0.0, 0.9, sz_ - 0.5, sz_ + 0.5, "stone", (0.7, 0.6, 0.4))
+        m.span(sx_ - 1.05, sx_ + 1.05, 0.9, 1.05, sz_ - 0.55, sz_ + 0.55, "stone", (0.75, 0.62, 0.3))
+    for (sx_, sz_) in ((23.0, -18.6), (27.0, -4.0)):
+        m.span(sx_ - 0.6, sx_ + 0.6, 0.0, 3.2, sz_ - 0.6, sz_ + 0.6, "stone", (0.7, 0.62, 0.48))
+    m.wall((26.0, Z0), (26.0, -13.0), "z", "stone", (0.7, 0.62, 0.48), height=3.0,
+           holes=[(2.6, 4.0, 0.0, 2.2, {"name": "tomb door", "into": "+", "away": False, "mat": "stone", "tint": (0.6, 0.52, 0.4)})])
+    m.wall((26.0, -13.0), (X1, -13.0), "x", "stone", (0.7, 0.62, 0.48), height=3.0)
+    m.span(26.0, X1 - 0.15, 3.0, 3.15, Z0 + 0.15, -13.0, "stone", (0.7, 0.62, 0.48))
+    m.span(27.6, 29.6, 0.0, 0.9, -19.6, -18.6, "stone", (0.75, 0.62, 0.3))
+    m.light(28.0, 2.6, -16.0, rng=4.0, energy=0.3, colour=(1.0, 0.7, 0.4))
+    # The art gallery: free-standing partitions, a painting on each side.
+    for i, (a, b, along) in enumerate((((12.0, 6.0), (12.0, 12.0), "z"), ((16.0, 9.0), (22.0, 9.0), "x"), ((20.0, 13.0), (20.0, 18.5), "z"),
+                                       ((24.0, 5.0), (24.0, 11.0), "z"), ((14.0, 15.0), (18.0, 15.0), "x"), ((26.0, 14.0), (29.5, 14.0), "x"))):
+        m.wall(a, b, along, "paint", (0.96, 0.95, 0.92), height=3.2, thick=0.3)
+        pc = [(0.7, 0.2, 0.2), (0.2, 0.4, 0.7), (0.85, 0.7, 0.2), (0.25, 0.55, 0.35)][i % 4]
+        if along == "z":
+            mid = (a[1] + b[1]) / 2
+            m.span(a[0] - 0.18, a[0] - 0.15, 1.2, 2.6, mid - 1.0, mid + 1.0, "flat", pc)
+            m.span(a[0] + 0.15, a[0] + 0.18, 1.2, 2.6, mid - 1.0, mid + 1.0, "flat", pc)
+        else:
+            mid = (a[0] + b[0]) / 2
+            m.span(mid - 1.0, mid + 1.0, 1.2, 2.6, a[1] - 0.18, a[1] - 0.15, "flat", pc)
+            m.span(mid - 1.0, mid + 1.0, 1.2, 2.6, a[1] + 0.15, a[1] + 0.18, "flat", pc)
+    m.prop("furniture_bench_cushion", 16.0, 6.0, 0.0)
+    m.prop("furniture_bench_cushion", 26.0, 18.6, 180.0)
+    # The staff rooms: security office (monitors, lockers) and the loading store.
+    d_ = m.prop("furniture_desk", -4.0, -18.8, 0.0)
+    m.on("furniture_computer_screen", d_, dx=-0.4)
+    m.on("furniture_computer_screen", d_, dx=0.4)
+    m.prop("furniture_chair_desk", -4.0, -17.8, 180.0)
+    m.span(-7.85, -7.4, 0.0, 2.0, -19.6, -14.0, "locker")
+    m.prop("furniture_coat_rack_standing", -1.0, -11.0)
+    for (bx, bz) in ((3.0, -18.6), (3.6, -18.2), (5.0, -18.8), (6.6, -17.0), (2.4, -15.0), (6.0, -12.0)):
+        m.span(bx - 0.5, bx + 0.5, 0.0, 1.0, bz - 0.5, bz + 0.5, "wood", (0.66, 0.5, 0.34))
+    m.span(2.9, 3.7, 1.0, 1.8, -18.9, -18.1, "wood", (0.66, 0.5, 0.34))
+
+    # --- Upper floor ----------------------------------------------------------------------
+    U = H
+    # The armour hall: display cases on plinths, suits on stands, banners.
+    for (cx, cz) in ((-26.0, -16.0), (-20.0, -16.0), (-14.0, -16.0), (-26.0, -9.0), (-14.0, -9.0), (-20.0, -3.0)):
+        m.span(cx - 1.0, cx + 1.0, U, U + 1.0, cz - 0.6, cz + 0.6, "wood", oak)
+        m.span(cx - 0.95, cx + 0.95, U + 1.0, U + 2.0, cz - 0.55, cz + 0.55, "glass")
+    for (sx_, sz_) in ((-20.0, -9.5), (-17.0, -12.0), (-23.0, -12.0), (-11.0, -1.0)):
+        m.prop("furniture_coat_rack_standing", sx_, sz_, y=U)
+    for (bx, bz) in ((-29.7, -14.0), (-29.7, -6.0)):
+        m.span(bx - 0.03, bx + 0.03, U + 1.4, U + 4.0, bz - 0.8, bz + 0.8, "fabric", (0.6, 0.12, 0.15))
+    # The library, and its vault behind a panel.
+    for bz in (6.0, 9.0, 12.0):
+        for bx in (-22.0, -19.0, -16.0, -13.0):
+            m.prop("furniture_bookcase_closed_wide" if (int(bx) + int(bz)) % 2 else "furniture_bookcase_open", bx, bz, 0.0, y=U)
+    m.prop("furniture_table", -20.0, 16.6, 0.0, y=U)
+    m.prop("furniture_chair", -20.6, 17.4, 180.0, y=U)
+    m.prop("furniture_chair", -19.4, 15.8, 0.0, y=U)
+    m.wall((-25.0, 14.0), (-25.0, Z1), "z", "paint", cream, height=H, y0=U,
+           holes=[(2.0, 3.0, 0.0, 2.1, {"name": "panel", "secret": True, "hinge": "start"})])
+    m.wall((X0, 14.0), (-25.0, 14.0), "x", "paint", cream, height=H, y0=U)
+    m.against("furniture_bookcase_closed", "e", -25.1, 15.0, y=U)
+    m.against("furniture_bookcase_closed", "e", -25.1, 18.2, y=U)
+    m.span(-29.6, -28.4, U, U + 1.6, 14.4, 15.6, "metal", (0.3, 0.32, 0.34))
+    m.prop("furniture_cardboard_box_closed", -27.0, 18.8, 30.0, y=U)
+    m.prop("furniture_cardboard_box_closed", -28.6, 19.0, 5.0, y=U)
+    m.light(-27.5, U + 2.6, 17.0, rng=4.0, energy=0.35, colour=(1.0, 0.8, 0.55))
+    # The space gallery: a rocket, a capsule with a door, a moon rock under glass.
+    for i, (h0, h1, tint) in enumerate(((0.0, 1.4, (0.9, 0.9, 0.92)), (1.4, 3.0, (0.9, 0.9, 0.92)), (3.0, 4.0, (0.8, 0.2, 0.2)), (4.0, 4.6, (0.3, 0.3, 0.32)))):
+        r_ = (0.9, 0.8, 0.6, 0.25)[i]
+        m.span(24.0 - r_, 24.0 + r_, U + h0, U + h1, -14.0 - r_, -14.0 + r_, "metal", tint)
+    for (fx, fz) in ((22.6, -15.4), (25.4, -15.4), (22.6, -12.6), (25.4, -12.6)):
+        m.span(fx - 0.2, fx + 0.2, U, U + 1.0, fz - 0.2, fz + 0.2, "metal", (0.8, 0.2, 0.2))
+    cpx0, cpx1, cpz0, cpz1 = 12.0, 15.0, -18.0, -15.0
+    m.span(cpx0, cpx1, U + 2.2, U + 2.4, cpz0, cpz1, "metal", (0.75, 0.76, 0.78))
+    m.wall((cpx0, cpz0), (cpx1, cpz0), "x", "metal", (0.75, 0.76, 0.78), height=2.2, y0=U, thick=0.15)
+    m.wall((cpx0, cpz0), (cpx0, cpz1), "z", "metal", (0.75, 0.76, 0.78), height=2.2, y0=U, thick=0.15, holes=[(1.0, 2.0, 1.2, 1.7)])
+    m.wall((cpx1, cpz0), (cpx1, cpz1), "z", "metal", (0.75, 0.76, 0.78), height=2.2, y0=U, thick=0.15)
+    m.wall((cpx0, cpz1), (cpx1, cpz1), "x", "metal", (0.75, 0.76, 0.78), height=2.2, y0=U, thick=0.15,
+           holes=[(0.9, 2.1, 0.0, 1.9, {"name": "hatch", "into": "+", "away": False, "mat": "metal", "tint": (0.6, 0.62, 0.65)})])
+    m.span(16.0, 17.6, U, U + 1.0, -6.0, -4.4, "wood", oak)
+    m.span(16.05, 17.55, U + 1.0, U + 1.8, -5.95, -4.45, "glass")
+    # The textiles gallery: stands of clothes in rows, and a fitting room.
+    for rz in (6.0, 10.0, 14.0):
+        for rx in (12.0, 15.0, 18.0, 21.0, 24.0):
+            m.prop("furniture_coat_rack_standing", rx, rz, (rx * 13) % 90, y=U)
+    fitting_rooms(m, 26.6, Z1 - 0.2, 1, U, booths=2)
+    # The conservation lab over the staff rooms.
+    for (tx, tz) in ((-4.0, -16.0), (2.0, -16.0), (-4.0, -12.6), (2.0, -12.6)):
+        t = m.prop("furniture_table", tx, tz, 0.0, y=U)
+        m.on("furniture_lamp_round_table", t, dx=0.5)
+    m.against("furniture_bookcase_closed_doors", "n", Z0 + 0.15, 5.6, y=U)
+
+    # --- Outside: the plaza, statues, a fountain, the loading dock -----------------------------
+    m.overlay(-20.0, 20.5, 20.0, 40.0, "tile", (0.8, 0.78, 0.74))
+    for (sx_, sz_) in ((-12.0, 26.0), (12.0, 26.0)):
+        m.span(sx_ - 1.0, sx_ + 1.0, 0.0, 1.2, sz_ - 1.0, sz_ + 1.0, "stone", stone)
+        m.span(sx_ - 0.4, sx_ + 0.4, 1.2, 3.4, sz_ - 0.4, sz_ + 0.4, "stone", (0.6, 0.62, 0.6))
+    for (a, b, c, d) in ((-3.0, 30.0, 3.0, 30.4), (-3.0, 35.6, 3.0, 36.0), (-3.0, 30.4, -2.6, 35.6), (2.6, 30.4, 3.0, 35.6)):
+        m.span(a, c, 0.0, 0.6, b, d, "stone", stone)
+    m.span(-2.6, 2.6, 0.4, 0.45, 30.4, 35.6, "water", None, solid=False)
+    for (bx, bz, yaw) in ((-8.0, 33.0, 90.0), (8.0, 33.0, -90.0), (-16.0, 36.0, 0.0), (16.0, 36.0, 0.0)):
+        m.prop("furniture_bench", bx, bz, yaw)
+    for (tx, tz, kind) in ((-24.0, 30.0, "nature_tree_default"), (24.0, 30.0, "nature_tree_oak"), (-40.0, -30.0, "nature_tree_tall"),
+                           (40.0, -30.0, "nature_tree_fat"), (-40.0, 44.0, "nature_tree_detailed"), (40.0, 44.0, "nature_tree_default")):
+        m.prop(kind, tx, tz, (tx * 7) % 90)
+    container(m, -2.0, -34.0, "x", open_end="w", tint=(0.3, 0.4, 0.55))
+    m.span(-6.0, 6.0, 0.0, 1.2, -24.0, -21.0, "concrete")
+
+    for (x, z) in ((-4.0, 9.0), (4.0, 9.0), (-7.0, -4.0), (7.0, 4.0), (-4.0, -8.0), (4.0, -8.0), (0.0, 15.0), (-3.0, 4.0)):
+        m.spawn("hiders", x, z)
+    for (x, z) in ((-6.0, 32.0), (-10.0, 32.0), (6.0, 38.0), (10.0, 38.0)):
+        m.spawn("seekers", x, z)
+    return m.build()
+
+
 MAPS = {
     "hs_apartments": apartments,
     "hs_warehouse": warehouse,
@@ -3141,6 +3390,7 @@ MAPS = {
     "hs_ship": ship,
     "hs_castle": castle,
     "hs_camp": camp,
+    "hs_museum": museum,
 }
 
 
