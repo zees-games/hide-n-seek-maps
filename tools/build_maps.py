@@ -219,6 +219,15 @@ class Map:
         else:
             # Turned 90 degrees, the panel's own +x is world -z: the start (smaller z) is its right.
             at, yaw, side = (fixed, y0 + height / 2, mid), 90.0, (1 if hinge == "start" else -1)
+        # In a thick wall (a castle's, a tower's) a swinging door hangs on the face it opens
+        # towards, square and one way only: in the middle of a deep opening it would swing into
+        # the opening's own sides.
+        sign_into = 1 if into == "+" else -1
+        if wall_thick > 0.45 and not secret and (motion or "swing") == "swing":
+            shift = sign_into * (wall_thick / 2 - 0.06)
+            at = (at[0], at[1], at[2] + shift) if along == "x" else (at[0] + shift, at[1], at[2])
+            away = False
+            angle = min(angle, 90.0)
         if secret:
             motion = motion or "slide"
             thick = max(wall_thick - 0.03, 0.05)
@@ -2576,6 +2585,311 @@ def ship():
     return m.build()
 
 
+def crenellate(m, a, b, along, fixed, y, thick, mat="stone", tint=None, step=1.6, height=1.0):
+    """Merlons along an edge: blocks `step / 2` long every `step`, on a wall top at `y`, from a to b
+    along `along` with their middle on `fixed`. A wall walk's parapet, a tower's top."""
+    x = a
+    while x + step / 2 <= b + 0.01:
+        if along == "x":
+            m.span(x, x + step / 2, y, y + height, fixed - thick / 2, fixed + thick / 2, mat, tint)
+        else:
+            m.span(fixed - thick / 2, fixed + thick / 2, y, y + height, x, x + step / 2, mat, tint)
+        x += step
+
+
+def castle():
+    """Ravenhold Castle: a curtain wall with a walk along its top and a tower at each corner, a
+    gatehouse with a portcullis over a moat, a keep of three floors over a dungeon, stables,
+    a smithy and a well in the courtyard.
+
+    The walls are the way round: up any tower, along the walk, down another, or down the stairs
+    against the inside of the east and west walls. The keep is the way up, to its roof. And the
+    dungeon is the way out that nobody sees: a panel in the guard room's wall opens on a tunnel
+    under the courtyard that comes up through the floor of the stables' tack room."""
+    m = Map(
+        "hs_castle", "Ravenhold Castle",
+        "A walled castle with four towers, a keep over a dungeon, and a tunnel nobody is meant to know about.",
+        {"sky_top": [0.38, 0.5, 0.72], "sky_horizon": [0.82, 0.8, 0.76], "ground": [0.3, 0.32, 0.26],
+         "sun_pitch": -38, "sun_yaw": 230, "sun_energy": 1.0, "sun_colour": [1.0, 0.92, 0.8],
+         "ambient": [0.58, 0.6, 0.66], "ambient_energy": 0.5, "fog": 0.0018},
+        kill_y=-10.0,
+    )
+    grey = (0.72, 0.7, 0.66)
+    dark = (0.55, 0.53, 0.5)
+    oak = (0.45, 0.32, 0.22)
+    W = 31.0          # the curtain wall's centre line
+    WT = 2.0          # its thickness
+    WH = 6.0          # its height: the walk is on top
+    T = 32.0          # the towers' centres
+    TH = 9.0
+    MOAT = (36.0, 42.0)
+
+    # --- The ground: the field round the moat, the moat, the berm, the courtyard ----------
+    m.floor_around(-64, -64, 64, 64, (-MOAT[1], -MOAT[1], MOAT[1], MOAT[1]), "grass", y=GROUND)
+    for (a, b, c, d) in ((-MOAT[1], -MOAT[1], MOAT[1], -MOAT[0]), (-MOAT[1], MOAT[0], MOAT[1], MOAT[1]),
+                         (-MOAT[1], -MOAT[0], -MOAT[0], MOAT[0]), (MOAT[0], -MOAT[0], MOAT[1], MOAT[0])):
+        m.span(a, c, -1.8, -1.6, b, d, "dirt", (0.4, 0.36, 0.3))
+        m.span(a, c, -0.65, -0.6, b, d, "water", None, solid=False)
+    m.floor_around(-MOAT[0], -MOAT[0], MOAT[0], MOAT[0], (-30.0, -30.0, 30.0, 30.0), "grass", (0.85, 0.9, 0.8), y=GROUND)
+    for (a, b, c, d, way) in ((-MOAT[1], -1.0, -40.8, 1.0, "w"), (40.8, -1.0, MOAT[1], 1.0, "e"),
+                              (-1.0, -MOAT[1], 1.0, -40.8, "n"), (20.0, 40.8, 22.0, MOAT[1], "s")):
+        flight(m, a, c, b, d, -1.6, 0.0, way, "stone", dark, thick=0.25)
+    boundary(m, -64, -64, 64, 64, height=2.4, mat="hedge", tint=(0.8, 1.0, 0.8))
+    m.overlay(-2.0, MOAT[1], 2.0, 64.0, "dirt", (0.7, 0.6, 0.45))
+
+    # The courtyard's ground, with the keep's footprint and the tunnel's stair left out of it.
+    tunnel_hole = (-11.5, 3.0, -9.9, 10.5)
+    slab(m, -30.0, -30.0, 30.0, 30.0, 0.0, [(-12.0, -26.0, 12.0, -8.0), tunnel_hole], "dirt", (0.75, 0.68, 0.55))
+
+    # --- The curtain wall, its walk and its merlons --------------------------------------
+    m.wall((-28.0, -W), (28.0, -W), "x", "stone", grey, height=WH, thick=WT, glass=False,
+           holes=[(42.0, 43.4, 0.0, DOOR_H, {"name": "postern", "into": "-", "away": False, "tint": oak})])
+    m.wall((-28.0, W), (28.0, W), "x", "stone", grey, height=WH, thick=WT, glass=False,
+           holes=[(24.0, 32.0, 0.0, 4.0, {"name": "castle gate", "leaves": 2, "into": "-", "away": False, "open": True, "angle": 85.0, "tint": oak, "seconds": 1.6})])
+    m.wall((-W, -28.0), (-W, 28.0), "z", "stone", grey, height=WH, thick=WT, glass=False)
+    m.wall((W, -28.0), (W, 28.0), "z", "stone", grey, height=WH, thick=WT, glass=False)
+    for sgn in (-1, 1):
+        crenellate(m, -28.0, 28.0, "x", sgn * (W + WT / 2 - 0.25), WH, 0.5, tint=grey)
+        crenellate(m, -28.0, 28.0, "z", sgn * (W + WT / 2 - 0.25), WH, 0.5, tint=grey)
+    # Stairs up the inside of the east and west walls to the walk.
+    flight(m, W - WT / 2 - 2.0, W - WT / 2, -6.0, 7.0, 0.0, WH, "n", "stone", dark, thick=0.3)
+    flight(m, -W + WT / 2, -W + WT / 2 + 2.0, -7.0, 6.0, 0.0, WH, "s", "stone", dark, thick=0.3)
+    # A landing at the top of each, beside the walk, with a rail across its far end: the top
+    # step is otherwise a drop.
+    m.span(W - WT / 2 - 2.0, W - WT / 2, WH - 0.3, WH, -9.0, -6.0, "stone", dark)
+    railing(m, W - WT / 2 - 2.0, -9.0, W - WT / 2, -9.0, WH)
+    railing(m, W - WT / 2 - 2.0, -9.0, W - WT / 2 - 2.0, -6.0, WH)
+    m.span(-W + WT / 2, -W + WT / 2 + 2.0, WH - 0.3, WH, 6.0, 9.0, "stone", dark)
+    railing(m, -W + WT / 2, 9.0, -W + WT / 2 + 2.0, 9.0, WH)
+    railing(m, -W + WT / 2 + 2.0, 6.0, -W + WT / 2 + 2.0, 9.0, WH)
+    # The gatehouse: two half-towers outside the gate, the passage roofed between them, and the
+    # portcullis at its outer end, up.
+    for gx in (-8.0, 4.0):
+        m.span(gx, gx + 4.0, 0.0, 8.0, W + WT / 2, MOAT[0], "stone", grey)
+        crenellate(m, gx, gx + 4.0, "x", MOAT[0] - 0.25, 8.0, 0.5, tint=grey)
+    m.span(-4.0, 4.0, 4.4, WH, W + WT / 2, MOAT[0], "stone", grey)
+    m.door("x", -4.0, 4.0, MOAT[0] - 0.6, 0.0, 4.4, name="portcullis", motion="lift", travel=3.8, open=True,
+           mat="metal", tint=(0.25, 0.25, 0.27), seconds=2.0)
+    m.span(-4.0, 4.0, -0.2, 0.0, MOAT[0], MOAT[1], "wood", oak)
+    m.span(14.0, 15.4, -0.2, 0.0, -MOAT[1], -MOAT[0], "wood", oak)
+    m.light(0.0, 3.6, 33.5, rng=6.0, energy=0.7, colour=(1.0, 0.8, 0.55))
+
+    # --- The towers: a switchback inside each, from the courtyard to the walk to the top -----
+    for cx in (-T, T):
+        for cz in (-T, T):
+            sx_, sz_ = (1 if cx > 0 else -1), (1 if cz > 0 else -1)
+            x0, x1, z0, z1 = cx - 4.0, cx + 4.0, cz - 4.0, cz + 4.0
+            sx = cx - 3.2 if cx < 0 else cx - 0.8
+            inner_x = cx - sx_ * 4.0          # the face towards the courtyard in x
+            inner_z = cz - sz_ * 4.0
+            # Doors: the courtyard at the foot, the two walks at 6.
+            def along_z(z_lo, z_hi):
+                return (z_lo - z0, z_hi - z0)
+            def along_x(x_lo, x_hi):
+                return (x_lo - x0, x_hi - x0)
+            gz = along_z(*sorted((cz - sz_ * 2.0, cz - sz_ * 3.4)))
+            wz = along_z(*sorted((cz - sz_ * 0.0, cz - sz_ * 2.0)))
+            wx = along_x(*sorted((cx - sx_ * 0.0, cx - sx_ * 2.0)))
+            slits = [(1.0, 1.4, 1.2, 2.4), (6.6, 7.0, 4.2, 5.4)]
+            tdoor = {"name": "tower door", "into": "+" if sx_ < 0 else "-", "hinge": "end" if sz_ < 0 else "start", "tint": oak}
+            for face_x in (x0, x1):
+                holes = list(slits) if face_x != inner_x else []
+                if face_x == inner_x:
+                    holes = [(gz[0], gz[1], 0.0, DOOR_H, tdoor), (wz[0], wz[1], WH, WH + DOOR_H)]
+                m.wall((face_x, z0), (face_x, z1), "z", "stone", grey, height=TH, thick=0.6, holes=holes, glass=False)
+            for face_z in (z0, z1):
+                holes = list(slits) if face_z != inner_z else [(wx[0], wx[1], WH, WH + DOOR_H)]
+                m.wall((x0, face_z), (x1, face_z), "x", "stone", grey, height=TH, thick=0.6, holes=holes, glass=False)
+            zf, zb = cz + 3.2, cz - 3.2
+            for y0 in (0.0, 3.0, 6.0):
+                switchback(m, sx, zf, zb, y0, y0 + 3.0, "stone", dark, run=2.4)
+            for y in (3.0, 6.0, TH):
+                slab(m, x0 + 0.3, z0 + 0.3, x1 - 0.3, z1 - 0.3, y, [(sx, zb, sx + 4.0, zf)], "stone", dark)
+            railing(m, sx, zb, sx + 4.0, zb, TH, mat="metal")
+            railing(m, sx, zb, sx, zf, TH, mat="metal")
+            railing(m, sx + 4.0, zb, sx + 4.0, zf, TH, mat="metal")
+            railing(m, sx, zf, sx + 2.0, zf, TH, mat="metal")
+            for sgn in (-1, 1):
+                crenellate(m, x0, x1, "x", cz + sgn * 3.75, TH, 0.5, tint=grey)
+                crenellate(m, z0 + 0.5, z1 - 0.5, "z", cx + sgn * 3.75, TH, 0.5, tint=grey)
+            m.light(cx, 2.5, cz, rng=5.0, energy=0.5, colour=(1.0, 0.8, 0.55))
+            m.light(cx, 5.5, cz, rng=5.0, energy=0.5, colour=(1.0, 0.8, 0.55))
+
+    # --- The keep: three floors and a roof over the dungeon -------------------------------
+    KX0, KX1, KZ0, KZ1 = -12.0, 12.0, -26.0, -8.0
+    KH = 4.0
+    stair = (-11.4, -25.4, -7.4, -19.0)
+    down = (3.4, -18.0, 5.4, -12.0)
+    slab(m, KX0, KZ0, KX1, KZ1, 0.0, [down], "stone", (0.6, 0.58, 0.55))
+    for y in (KH, 2 * KH, 3 * KH):
+        slab(m, KX0, KZ0, KX1, KZ1, y, [stair], "wood" if y < 3 * KH else "stone", oak if y < 3 * KH else dark)
+    for k, y0 in enumerate((0.0, KH, 2 * KH)):
+        switchback(m, stair[0], stair[3], stair[1], y0, y0 + KH, "stone", dark, run=2.4)
+        slit = [(x, x + 0.5, 1.2, 2.8) for x in (3.0, 9.0, 15.0, 21.0)]
+        front = list(slit)
+        if k == 0:
+            front = [(3.0, 3.5, 1.2, 2.8), (10.6, 13.4, 0.0, 2.8, {"name": "keep doors", "leaves": 2, "into": "-", "away": False, "angle": 85.0, "tint": oak}), (21.0, 21.5, 1.2, 2.8)]
+        m.wall((KX0, KZ1), (KX1, KZ1), "x", "stone", grey, height=KH, y0=y0, thick=1.0, holes=front, glass=False)
+        m.wall((KX0, KZ0), (KX1, KZ0), "x", "stone", grey, height=KH, y0=y0, thick=1.0, holes=slit, glass=False)
+        m.wall((KX0, KZ0), (KX0, KZ1), "z", "stone", grey, height=KH, y0=y0, thick=1.0, holes=[(6.0, 6.5, 1.2, 2.8), (12.0, 12.5, 1.2, 2.8)], glass=False)
+        east = [(6.0, 6.5, 1.2, 2.8), (14.0, 15.4, 0.0, DOOR_H, {"name": "kitchen door", "into": "-", "tint": oak})] if k == 0 else [(6.0, 6.5, 1.2, 2.8), (12.0, 12.5, 1.2, 2.8)]
+        m.wall((KX1, KZ0), (KX1, KZ1), "z", "stone", grey, height=KH, y0=y0, thick=1.0, holes=east, glass=False)
+        if k < 2:
+            m.wall((6.0 if k == 0 else 0.0, KZ0), (6.0 if k == 0 else 0.0, KZ1), "z", "plaster", (0.85, 0.8, 0.7), height=KH, y0=y0,
+                   holes=[(12.0, 13.4, 0.0, DOOR_H, {"name": "kitchen door" if k == 0 else "library door", "into": "+", "tint": oak})])
+        lights_over(m, KX0 + 0.5, KZ0 + 0.5, KX1 - 0.5, KZ1 - 0.5, y0 + KH - 0.2, energy=0.9, colour=(1.0, 0.82, 0.6))
+    railing(m, stair[0], stair[3], stair[0] + 2.0, stair[3], 3 * KH)
+    railing(m, stair[2], stair[1], stair[2], stair[3], 3 * KH)
+    railing(m, stair[0], stair[1], stair[2], stair[1], 3 * KH)
+    for sgn in (-1, 1):
+        crenellate(m, KX0 - 0.5, KX1 + 0.5, "x", (KZ0 if sgn < 0 else KZ1) + sgn * 0.25, 3 * KH, 0.5, tint=grey)
+        crenellate(m, KZ0, KZ1, "z", (KX0 if sgn < 0 else KX1) + sgn * 0.25, 3 * KH, 0.5, tint=grey)
+    # The great hall: a dais and a chair, long tables, a hearth; the kitchen beyond.
+    m.span(-6.0, 4.0, 0.0, 0.4, -25.5, -23.0, "wood", oak)
+    m.prop("furniture_lounge_design_chair", -1.0, -24.2, 0.0, y=0.4)
+    m.prop("furniture_side_table", 1.0, -24.4, 0.0, y=0.4)
+    for tx in (-4.0, 1.0):
+        for tz in (-20.0, -16.0, -12.0):
+            m.prop("furniture_table_cloth", tx, tz, 90.0)
+            m.prop("furniture_bench", tx - 0.9, tz, 90.0)
+            m.prop("furniture_bench", tx + 0.9, tz, -90.0)
+    m.span(-11.5, -10.5, 0.0, 2.4, -16.0, -12.0, "stone", dark)
+    m.span(-11.5, -10.9, 0.0, 0.8, -15.4, -12.6, "dirt", (0.25, 0.2, 0.18), solid=False)
+    m.light(-10.2, 0.8, -14.0, rng=5.0, energy=0.9, colour=(1.0, 0.55, 0.25))
+    railing(m, down[0], down[1], down[0], down[3], 0.0, mat="wood", tint=oak)
+    railing(m, down[0], down[1], down[2], down[1], 0.0, mat="wood", tint=oak)
+    m.against("furniture_kitchen_stove", "e", KX1 - 0.5, -24.0)
+    m.against("furniture_kitchen_cabinet", "e", KX1 - 0.5, -22.6)
+    m.against("furniture_kitchen_fridge", "n", KZ0 + 0.5, 9.0)
+    for (bx, bz) in ((8.0, -20.0), (9.0, -20.0), (8.0, -19.0)):
+        m.prop("furniture_kitchen_bar", bx, bz, 0.0)
+    for i, (bx, bz) in enumerate(((7.0, -10.0), (8.0, -9.6), (10.6, -16.0), (10.6, -17.0))):
+        m.span(bx - 0.4, bx + 0.4, 0.0, 1.0, bz - 0.4, bz + 0.4, "wood", (0.55, 0.38, 0.24))
+    # The lord's chamber and the library; the barracks over them.
+    m.prop("furniture_bed_double", -4.0, -23.8, 0.0, y=KH)
+    m.prop("furniture_rug_rectangle", -4.0, -20.6, y=KH)
+    m.prop("furniture_desk", -4.0, -10.0, 180.0, y=KH)
+    m.prop("furniture_chair_desk", -4.0, -10.9, 0.0, y=KH)
+    m.against("furniture_bookcase_closed_doors", "w", KX0 + 0.5, -14.0, y=KH)
+    m.prop("furniture_lounge_chair", -9.0, -10.4, 135.0, y=KH)
+    for i, bz in enumerate((-24.0, -21.0, -18.0, -15.0)):
+        m.prop("furniture_bookcase_closed_wide" if i % 2 else "furniture_bookcase_open", 6.0, bz, 0.0, y=KH)
+    m.prop("furniture_table", 6.0, -11.2, 0.0, y=KH)
+    m.prop("furniture_chair", 5.4, -10.4, 180.0, y=KH)
+    for bx in (-4.0, 0.0, 4.0, 8.0):
+        m.prop("furniture_bed_bunk", bx, -24.0, 0.0, y=2 * KH)
+        m.prop("furniture_bed_bunk", bx, -10.0, 180.0, y=2 * KH)
+    m.prop("furniture_cardboard_box_closed", 10.5, -17.0, 10.0, y=2 * KH)
+    m.prop("furniture_cardboard_box_closed", 10.5, -16.2, 40.0, y=2 * KH)
+
+    # --- The dungeon, under the keep ------------------------------------------------------
+    DY = -3.5
+    m.span(KX0, KX1, DY - 0.2, DY, KZ0, KZ1, "stone", dark)
+    m.wall((KX0, KZ0), (KX1, KZ0), "x", "stone", dark, height=-DY, y0=DY, thick=1.0, glass=False)
+    m.wall((KX0, KZ1), (KX1, KZ1), "x", "stone", dark, height=-DY, y0=DY, thick=1.0, glass=False,
+           holes=[(0.6, 1.6, 0.0, 2.1, {"name": "loose stones", "secret": True, "hinge": "end"})])
+    m.wall((KX0, KZ0), (KX0, KZ1), "z", "stone", dark, height=-DY, y0=DY, thick=1.0, glass=False)
+    m.wall((KX1, KZ0), (KX1, KZ1), "z", "stone", dark, height=-DY, y0=DY, thick=1.0, glass=False)
+    flight(m, down[0], down[2], down[1], down[3], DY, 0.0, "s", "stone", dark, thick=0.25)
+    for cx in (-8.0, -4.0, 0.0, 4.0):
+        m.wall((cx, KZ0), (cx, -20.0), "z", "stone", dark, height=-DY, y0=DY, glass=False)
+    m.wall((KX0, -20.0), (8.0, -20.0), "x", "metal", (0.3, 0.3, 0.32), height=-DY, y0=DY, glass=False,
+           holes=[(i * 4.0 + 1.3, i * 4.0 + 2.7, 0.0, 2.1, {"name": "cell door", "into": "-", "away": False, "mat": "metal", "tint": (0.3, 0.3, 0.32)}) for i in range(5)])
+    m.wall((8.0, KZ0), (8.0, -20.0), "z", "stone", dark, height=-DY, y0=DY, glass=False)
+    for cx in (-10.0, -6.0, -2.0, 2.0, 6.0):
+        m.span(cx - 0.9, cx + 0.9, DY, DY + 0.5, KZ0 + 0.5, KZ0 + 1.3, "wood", (0.4, 0.3, 0.22))
+        m.light(cx, -0.6, -23.0, rng=4.0, energy=0.25, colour=(1.0, 0.7, 0.4))
+    m.prop("furniture_table", -6.0, -11.0, 0.0, y=DY)
+    m.prop("furniture_chair", -6.6, -10.2, 180.0, y=DY)
+    m.prop("furniture_cardboard_box_closed", 10.0, -10.0, 15.0, y=DY)
+    m.prop("furniture_cardboard_box_open", 10.6, -10.8, -20.0, y=DY)
+    m.light(-4.0, -0.6, -12.0, rng=8.0, energy=0.5, colour=(1.0, 0.7, 0.4))
+    m.light(6.0, -0.6, -16.0, rng=8.0, energy=0.4, colour=(1.0, 0.7, 0.4))
+    # The tunnel: south from the guard room's wall, under the courtyard, and up into the tack
+    # room through its floor.
+    tx0, tx1 = tunnel_hole[0], tunnel_hole[2]
+    m.span(tx0, tx1, DY - 0.2, DY, KZ1 + 0.5, tunnel_hole[3], "dirt", (0.35, 0.3, 0.25))
+    m.span(tx0 - 0.2, tx0, DY, 0.0, KZ1 + 0.5, tunnel_hole[3], "stone", dark)
+    m.span(tx1, tx1 + 0.2, DY, 0.0, KZ1 + 0.5, tunnel_hole[3], "stone", dark)
+    m.span(tx0 - 0.2, tx1 + 0.2, -1.2, -1.0, KZ1 + 0.5, tunnel_hole[1], "stone", dark)
+    flight(m, tx0, tx1, tunnel_hole[1], tunnel_hole[3], DY, 0.0, "s", "stone", dark, thick=0.25)
+    m.light((tx0 + tx1) / 2, -1.5, -2.0, rng=5.0, energy=0.25, colour=(1.0, 0.7, 0.4))
+    railing(m, tx0, tunnel_hole[1], tx0, tunnel_hole[3], 0.0, mat="wood", tint=oak)
+    railing(m, tx1, tunnel_hole[1], tx1, tunnel_hole[3], 0.0, mat="wood", tint=oak)
+    railing(m, tx0, tunnel_hole[1], tx1, tunnel_hole[1], 0.0, mat="wood", tint=oak)
+
+    # --- The courtyard: stables and the tack room, the smithy, the well ---------------------
+    SX0, SX1, SZ0, SZ1 = -28.0, -6.0, 0.0, 12.0
+    m.span(SX0, SX1, 3.2, 3.3, SZ0, SZ1, "wood", oak)
+    m.span(SX0 - 0.3, SX1 + 0.3, 3.3, 3.55, SZ0 - 0.3, SZ1 + 0.3, "roof", (0.45, 0.32, 0.25))
+    timber = (0.55, 0.4, 0.28)
+    m.wall((SX0, SZ0), (SX1, SZ0), "x", "wood", timber, height=3.2, thick=0.25, glass=False)
+    m.wall((SX0, SZ1), (SX1, SZ1), "x", "wood", timber, height=3.2, thick=0.25,
+           holes=[(6.0, 10.0, 0.0, 2.8, {"name": "stable doors", "leaves": 2, "into": "+", "away": False, "open": True, "tint": oak}),
+                  (19.0, 20.4, 0.0, DOOR_H, {"name": "tack room door", "into": "+", "away": False, "tint": oak})])
+    m.wall((SX0, SZ0), (SX0, SZ1), "z", "wood", timber, height=3.2, thick=0.25, glass=False)
+    m.wall((SX1, SZ0), (SX1, SZ1), "z", "wood", timber, height=3.2, thick=0.25, glass=False)
+    m.wall((-13.0, SZ0), (-13.0, SZ1), "z", "wood", timber, height=3.2, thick=0.2,
+           holes=[(9.0, 10.4, 0.0, DOOR_H, {"name": "tack room door", "into": "-", "away": False, "tint": oak})])
+    for i in range(4):
+        a = SX0 + i * 3.75
+        if i > 0:
+            m.span(a - 0.06, a + 0.06, 0.0, 1.6, SZ0, 4.0, "wood", timber)
+        m.door("x", a + 0.3, a + 3.45, 4.0, 0.0, 1.4, name="stall gate", hinge="start", into="+", away=False, angle=90.0, mat="wood", tint=oak)
+        m.span(a + 0.5, a + 1.7, 0.0, 0.8, SZ0 + 0.4, SZ0 + 1.2, "sand", (0.95, 0.82, 0.45))
+    m.span(-13.0 - 0.06, -13.0 + 0.06, 0.0, 1.6, SZ0, 4.0, "wood", timber)
+    for (hx, hz, lv) in ((-26.0, 10.6, 0), (-24.8, 10.6, 0), (-25.4, 10.6, 1), (-15.0, 10.4, 0)):
+        m.span(hx - 0.6, hx + 0.6, lv * 0.8, (lv + 1) * 0.8, hz - 0.4, hz + 0.4, "sand", (0.95, 0.82, 0.45))
+    m.light(-20.0, 2.6, 7.0, rng=9.0, energy=0.6, colour=(1.0, 0.85, 0.6))
+    m.light(-8.0, 2.6, 6.0, rng=6.0, energy=0.5, colour=(1.0, 0.85, 0.6))
+    m.prop("furniture_cardboard_box_closed", -7.0, 1.0, 10.0)
+    m.prop("furniture_cardboard_box_closed", -7.2, 2.0, 40.0)
+    m.against("furniture_bookcase_closed", "e", SX1 - 0.15, 6.0)
+    # The smithy: a roof on posts, a forge and an anvil.
+    m.span(14.0, 24.0, 3.0, 3.15, 2.0, 10.0, "roof", (0.4, 0.3, 0.25))
+    for px in (14.1, 23.9):
+        for pz in (2.1, 9.9):
+            m.span(px - 0.12, px + 0.12, 0.0, 3.0, pz - 0.12, pz + 0.12, "wood", timber)
+    m.span(20.0, 23.6, 0.0, 1.0, 2.4, 4.4, "stone", dark)
+    m.span(20.6, 23.0, 1.0, 1.1, 2.8, 4.0, "dirt", (0.3, 0.1, 0.05), solid=False)
+    m.light(21.8, 1.6, 3.4, rng=5.0, energy=0.8, colour=(1.0, 0.5, 0.2))
+    m.span(17.0, 18.0, 0.0, 0.8, 5.6, 6.2, "metal", (0.2, 0.2, 0.22))
+    for (bx, bz) in ((15.0, 9.0), (15.9, 9.2), (15.4, 8.3)):
+        m.span(bx - 0.4, bx + 0.4, 0.0, 1.0, bz - 0.4, bz + 0.4, "wood", (0.55, 0.38, 0.24))
+    # The well.
+    for (a, b, c, d) in ((4.0, 2.0, 7.0, 2.4), (4.0, 4.6, 7.0, 5.0), (4.0, 2.4, 4.4, 4.6), (6.6, 2.4, 7.0, 4.6)):
+        m.span(a, c, 0.0, 0.9, b, d, "stone", grey)
+    m.span(4.4, 6.6, -0.2, 0.05, 2.4, 4.6, "water", None, solid=False)
+    m.span(4.4, 6.6, -2.2, -2.0, 2.4, 4.6, "stone", dark)
+    for px in (4.1, 6.9):
+        m.span(px - 0.08, px + 0.08, 0.9, 2.4, 3.42, 3.58, "wood", timber)
+    m.span(4.0, 7.0, 2.4, 2.6, 3.0, 4.0, "roof", (0.4, 0.3, 0.25))
+    # Carts, barrels, haystacks, training posts, market stalls by the gate, trees.
+    for (cx, cz) in ((-18.0, 20.0), (10.0, 18.0)):
+        m.span(cx - 1.2, cx + 1.2, 0.5, 1.2, cz - 0.8, cz + 0.8, "wood", (0.55, 0.4, 0.28))
+        for wx_ in (cx - 0.9, cx + 0.9):
+            m.span(wx_ - 0.05, wx_ + 0.05, 0.0, 0.9, cz - 0.95, cz + 0.95, "wood", (0.3, 0.22, 0.15))
+    for (hx, hz, lv) in ((24.0, 20.0, 0), (25.2, 20.0, 0), (24.6, 20.0, 1), (-24.0, -20.0, 0), (-22.8, -20.0, 0)):
+        m.span(hx - 0.6, hx + 0.6, lv * 0.8, (lv + 1) * 0.8, hz - 0.4, hz + 0.4, "sand", (0.95, 0.82, 0.45))
+    for px in (16.0, 18.5, 21.0):
+        m.span(px - 0.1, px + 0.1, 0.0, 1.8, -18.1, -17.9, "wood", timber)
+        m.span(px - 0.5, px + 0.5, 1.2, 1.35, -18.1, -17.9, "wood", timber)
+    stall(m, -8.0, 22.0, (0.6, 0.2, 0.2))
+    stall(m, 8.0, 24.0, (0.2, 0.4, 0.6))
+    for (tx, tz, kind) in ((-20.0, -14.0, "nature_tree_oak"), (22.0, -6.0, "nature_tree_default"), (-50.0, -50.0, "nature_tree_tall"),
+                           (50.0, -48.0, "nature_tree_pine_round_a"), (-48.0, 52.0, "nature_tree_oak_fall"), (52.0, 50.0, "nature_tree_fat"),
+                           (-52.0, 10.0, "nature_tree_detailed"), (50.0, -10.0, "nature_tree_default"), (20.0, 54.0, "nature_tree_small")):
+        m.prop(kind, tx, tz, (tx * 7) % 90)
+    for (bx, bz) in ((-46.0, 30.0), (46.0, 26.0), (-30.0, 50.0), (30.0, -50.0), (-20.0, 26.0), (22.0, -22.0)):
+        m.prop("nature_plant_bush_large", bx, bz)
+
+    for (x, z) in ((-12.0, 18.0), (-4.0, 18.0), (4.0, 14.0), (12.0, 14.0), (-16.0, -4.0), (16.0, -4.0), (0.0, -4.0), (-2.0, 26.0)):
+        m.spawn("hiders", x, z)
+    for (x, z) in ((-6.0, 52.0), (-2.0, 52.0), (2.0, 52.0), (6.0, 52.0)):
+        m.spawn("seekers", x, z)
+    return m.build()
+
+
 MAPS = {
     "hs_apartments": apartments,
     "hs_warehouse": warehouse,
@@ -2585,6 +2899,7 @@ MAPS = {
     "hs_school": school,
     "hs_mall": mall,
     "hs_ship": ship,
+    "hs_castle": castle,
 }
 
 
