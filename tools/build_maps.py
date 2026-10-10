@@ -2890,6 +2890,246 @@ def castle():
     return m.build()
 
 
+def tent(m, x, z, facing, cloth):
+    """A ridge tent 2.4 m wide, 3 deep and 1.6 high, open at the end that faces `facing` ('n' or
+    's'): a place to crouch out of sight of everybody but somebody looking straight in."""
+    s_ = -1 if facing == "n" else 1
+    z0, z1 = (z - 1.5, z + 1.5)
+    back = z1 if facing == "n" else z0
+    m.span(x - 1.2, x + 1.2, 0.0, 1.2, back - 0.03, back + 0.03, "fabric", cloth)
+    m.span(x - 1.25, x - 1.19, 0.0, 1.2, z0, z1, "fabric", cloth)
+    m.span(x + 1.19, x + 1.25, 0.0, 1.2, z0, z1, "fabric", cloth)
+    # A box cannot pitch, so the roof is stepped in towards a ridge: it reads as a tent from
+    # anywhere a person stands, and keeps a crouching one's head covered.
+    for (half, y0, y1) in ((1.25, 1.2, 1.32), (0.85, 1.32, 1.46), (0.42, 1.46, 1.6)):
+        m.span(x - half, x + half, y0, y1, z0, z1, "fabric", cloth)
+
+
+def camp():
+    """Pinehollow Camp: a summer camp in the woods by a lake. Cabins on blocks, a mess hall,
+    tents round a fire, a fire lookout tower, a treehouse and its rope bridge, a boathouse and a
+    dock with boats, and a cave in the hillside with a chamber behind a rock that moves.
+
+    Outdoors and wide, like the park, but every part of it goes up or under or in: the tower is
+    the highest place on any map here and the most exposed, the treehouse the best view of the
+    fire, the cave the darkest, and the cabins have a crawl space under every one."""
+    m = Map(
+        "hs_camp", "Pinehollow Camp",
+        "A summer camp by a lake: cabins, a lookout tower, a treehouse, boats, and a cave with a secret.",
+        {"sky_top": [0.36, 0.54, 0.8], "sky_horizon": [0.86, 0.82, 0.72], "ground": [0.28, 0.32, 0.22],
+         "sun_pitch": -30, "sun_yaw": 250, "sun_energy": 1.0, "sun_colour": [1.0, 0.88, 0.7],
+         "ambient": [0.56, 0.6, 0.62], "ambient_energy": 0.48, "fog": 0.0022},
+        kill_y=-10.0,
+    )
+    wood = (0.58, 0.42, 0.28)
+    logs = (0.5, 0.36, 0.24)
+    rock = (0.55, 0.53, 0.5)
+    LAKE = (20.0, -32.0, 54.0, 6.0)
+
+    m.floor_around(-66, -66, 66, 66, LAKE, "grass", y=GROUND)
+    m.span(LAKE[0], LAKE[2], -1.4, -1.2, LAKE[1], LAKE[3], "sand", (0.5, 0.46, 0.36))
+    m.span(LAKE[0], LAKE[2], -0.35, -0.3, LAKE[1], LAKE[3], "water", None, solid=False)
+    flight(m, LAKE[0], LAKE[0] + 1.6, 0.0, 2.0, -1.2, 0.0, "w", "dirt", (0.5, 0.44, 0.34), thick=0.25)
+    flight(m, 40.0, 42.0, LAKE[3] - 1.6, LAKE[3], -1.2, 0.0, "s", "dirt", (0.5, 0.44, 0.34), thick=0.25)
+    boundary(m, -66, -66, 66, 66, height=2.6, mat="hedge", tint=(0.7, 0.85, 0.7))
+    tree_ring(m, -62, -62, 62, 62, 7.0, ["nature_tree_pine_tall_a", "nature_tree_cone", "nature_tree_pine_round_a", "nature_tree_tall", "nature_tree_default"], 3)
+    for (tx, tz, kind) in ((-24, 4, "nature_tree_pine_tall_a"), (-14, -4, "nature_tree_cone"), (14, 14, "nature_tree_oak"), (30, 26, "nature_tree_default"),
+                           (-44, 6, "nature_tree_pine_round_a"), (-6, -40, "nature_tree_tall"), (42, -44, "nature_tree_cone"), (52, 20, "nature_tree_pine_tall_a"),
+                           (-50, -14, "nature_tree_default"), (2, 39, "nature_tree_pine_round_a"), (-30, 40, "nature_tree_cone"), (26, 44, "nature_tree_tall"),
+                           (14, -48, "nature_tree_pine_tall_a"), (-20, -50, "nature_tree_default"), (44, 34, "nature_tree_oak_fall")):
+        m.prop(kind, float(tx), float(tz), (tx * 7 + tz) % 90)
+    for (bx, bz, kind) in ((-15, -13, "nature_plant_bush_large"), (14, 4, "nature_plant_bush_detailed"), (-36, 0, "nature_plant_bush_large"),
+                           (16, -2, "nature_plant_bush_large"), (36, 14, "nature_plant_bush_detailed"), (-4, 40, "nature_plant_bush_large"),
+                           (-46, 28, "nature_rock_large_a"), (48, -38, "nature_rock_tall_a"), (8, 44, "nature_rock_large_a"), (-16, 30, "nature_stump_old"),
+                           (34, 30, "nature_log_large"), (-2, -30, "nature_log")):
+        m.prop(kind, float(bx), float(bz), (bx * 11) % 90)
+
+    # --- The campfire and the tents round it -----------------------------------------
+    m.prop("nature_campfire_logs", 0.0, 0.0)
+    m.light(0.0, 1.2, 0.0, rng=8.0, energy=1.0, colour=(1.0, 0.6, 0.3))
+    for (lx, lz, yaw) in ((0.0, -3.4, 0.0), (0.0, 3.4, 0.0), (-3.4, 0.0, 90.0), (3.4, 0.0, 90.0)):
+        m.prop("nature_log", lx, lz, yaw)
+    for i, (tx, tz, face) in enumerate(((-9.0, -8.0, "s"), (-4.0, -9.0, "s"), (4.0, -9.0, "s"), (9.0, -8.0, "s"), (-8.0, 9.0, "n"), (8.0, 9.0, "n"))):
+        tent(m, tx, tz, face, [(0.3, 0.5, 0.3), (0.7, 0.4, 0.2), (0.3, 0.4, 0.7), (0.65, 0.2, 0.2)][i % 4])
+
+    # --- The cabins: on blocks, a crawl space under every one ------------------------------
+    CY = CRAWL_H + 0.1
+    for i, (cx, cz) in enumerate(((-34.0, -30.0), (-22.0, -30.0), (-34.0, -16.0), (-22.0, -16.0))):
+        x0, x1, z0, z1 = cx - 4.0, cx + 4.0, cz - 3.0, cz + 3.0
+        for bx in (x0 + 0.3, cx, x1 - 0.3):
+            for bz in (z0 + 0.3, z1 - 0.3):
+                m.span(bx - 0.2, bx + 0.2, 0.0, CY - 0.1, bz - 0.2, bz + 0.2, "stone", rock)
+        room_at(m, x0, z0, x1, z1, CY, "wood_floor", None, height=2.6, ceiling="wood", roof="roof", roof_tint=(0.35, 0.3, 0.26), lights=1, energy=0.8)
+        m.wall((x0, z0), (x1, z0), "x", "wood", logs, height=2.6, y0=CY, thick=0.25, holes=[(2.0, 3.4, 0.9, 1.9), (5.0, 6.4, 0.9, 1.9)])
+        m.wall((x0, z1), (x1, z1), "x", "wood", logs, height=2.6, y0=CY, thick=0.25,
+               holes=[(3.3, 4.7, 0.0, 2.1, {"name": "cabin door", "into": "-", "away": False, "tint": (0.4, 0.28, 0.18)})])
+        m.wall((x0, z0), (x0, z1), "z", "wood", logs, height=2.6, y0=CY, thick=0.25, holes=[(2.0, 4.0, 0.9, 1.9)])
+        m.wall((x1, z0), (x1, z1), "z", "wood", logs, height=2.6, y0=CY, thick=0.25, holes=[(2.0, 4.0, 0.9, 1.9)])
+        flight(m, cx - 0.7, cx + 0.7, z1, z1 + 2.0, 0.0, CY, "n", "wood", wood, thick=0.2)
+        m.against("furniture_bed_bunk", "w", x0 + 0.15, cz - 1.2, y=CY)
+        m.against("furniture_bed_bunk", "e", x1 - 0.15, cz - 1.2, y=CY)
+        m.prop("furniture_table", cx, cz - 0.6, 0.0, y=CY)
+        m.prop("furniture_cardboard_box_closed", x0 + 0.6, z1 - 0.6, 20.0, y=CY)
+
+    # --- The mess hall ------------------------------------------------------------------
+    hx0, hx1, hz0, hz1 = -14.0, 6.0, 18.0, 32.0
+    m.room(hx0, hz0, hx1, hz1, "wood_floor", None, height=3.4, roof_tint=(0.4, 0.3, 0.26), lights=2, energy=1.0)
+    m.wall((hx0, hz0), (hx1, hz0), "x", "wood", logs, height=3.4, thick=OUTER,
+           holes=[(2.0, 4.0, SILL, HEAD), (8.6, 11.4, 0.0, DOOR_H, {"name": "mess hall doors", "leaves": 2, "into": "+", "tint": (0.4, 0.28, 0.18)}), (15.0, 17.0, SILL, HEAD)])
+    m.wall((hx0, hz1), (hx1, hz1), "x", "wood", logs, height=3.4, thick=OUTER,
+           holes=[(16.0, 17.4, 0.0, DOOR_H, {"name": "kitchen door", "into": "+", "away": False, "tint": (0.4, 0.28, 0.18)})])
+    m.wall((hx0, hz0), (hx0, hz1), "z", "wood", logs, height=3.4, thick=OUTER, holes=[(4.0, 6.0, SILL, HEAD), (9.0, 11.0, SILL, HEAD)])
+    m.wall((hx1, hz0), (hx1, hz1), "z", "wood", logs, height=3.4, thick=OUTER, holes=[(4.0, 6.0, SILL, HEAD)])
+    m.wall((hx0, 27.0), (hx1, 27.0), "x", "wood", logs, height=3.4,
+           holes=[(14.0, 15.4, 0.0, DOOR_H, {"name": "kitchen door", "into": "+", "tint": (0.4, 0.28, 0.18)})])
+    for tx in (-10.0, -4.0):
+        for tz in (21.0, 24.0):
+            m.prop("furniture_table", tx, tz, 0.0)
+            m.prop("furniture_bench", tx - 0.5, tz - 0.8, 0.0)
+            m.prop("furniture_bench", tx + 0.5, tz + 0.8, 180.0)
+    m.prop("furniture_kitchen_bar", 3.0, 22.0, 90.0)
+    m.prop("furniture_kitchen_bar", 3.0, 23.0, 90.0)
+    kitchen_row(m, hx0 + 0.2, -6.0, hz1 - 0.15, "s")
+    m.prop("furniture_kitchen_fridge_large", 2.0, hz1 - 0.65, 180.0)
+    m.prop("furniture_cardboard_box_closed", -4.0, 28.0, 10.0)
+    # Two outhouses behind it.
+    for ox in (10.0, 12.0):
+        m.span(ox - 0.8, ox + 0.8, 2.4, 2.5, 30.0, 32.2, "roof", (0.35, 0.3, 0.26))
+        m.wall((ox - 0.8, 32.2), (ox + 0.8, 32.2), "x", "wood", wood, height=2.4, thick=0.1)
+        m.wall((ox - 0.8, 30.0), (ox - 0.8, 32.2), "z", "wood", wood, height=2.4, thick=0.1)
+        m.wall((ox + 0.8, 30.0), (ox + 0.8, 32.2), "z", "wood", wood, height=2.4, thick=0.1)
+        m.wall((ox - 0.8, 30.0), (ox + 0.8, 30.0), "x", "wood", wood, height=2.4, thick=0.1,
+               holes=[(0.15, 1.45, 0.0, 2.1, {"name": "outhouse door", "into": "-", "away": False, "tint": (0.4, 0.5, 0.3)})])
+        m.prop("furniture_toilet", ox, 31.75, 180.0)
+
+    # --- The fire lookout: a stair tower to a cabin twelve metres up ------------------------
+    lx, lz = -40.0, 18.0
+    for k in range(4):
+        switchback(m, lx, lz + 6.0, lz, 3.0 * k, 3.0 * (k + 1), "metal", (0.45, 0.42, 0.38), run=2.4)
+        # The tower is open-sided: a rail round each landing, or the turn is a fall.
+        ly = 3.0 * k + 1.5
+        railing(m, lx, lz, lx + 4.0, lz, ly)
+        railing(m, lx, lz, lx, lz + 3.6, ly)
+        railing(m, lx + 4.0, lz, lx + 4.0, lz + 3.6, ly)
+    for px in (lx - 2.0, lx + 6.0):
+        for pz in (lz - 2.0, lz + 8.0):
+            m.span(px - 0.15, px + 0.15, 0.0, 12.0, pz - 0.15, pz + 0.15, "wood", logs)
+    for y in (3.0, 6.0, 9.0):
+        m.span(lx - 2.0, lx + 6.0, y - 0.1, y, lz - 2.15, lz - 1.85, "wood", logs)
+        m.span(lx - 2.0, lx + 6.0, y - 0.1, y, lz + 7.85, lz + 8.15, "wood", logs)
+    slab(m, lx - 2.0, lz - 2.0, lx + 6.0, lz + 8.0, 12.0, [(lx, lz, lx + 4.0, lz + 6.0)], "wood", wood)
+    for (a, b, along, holes) in (((lx - 2.0, lz - 2.0), (lx + 6.0, lz - 2.0), "x", [(1.0, 7.0, 1.0, 2.2)]),
+                                 ((lx - 2.0, lz + 8.0), (lx + 6.0, lz + 8.0), "x", [(1.0, 7.0, 1.0, 2.2)]),
+                                 ((lx - 2.0, lz - 2.0), (lx - 2.0, lz + 8.0), "z", [(1.0, 9.0, 1.0, 2.2)]),
+                                 ((lx + 6.0, lz - 2.0), (lx + 6.0, lz + 8.0), "z", [(1.0, 9.0, 1.0, 2.2)])):
+        m.wall(a, b, along, "wood", wood, height=2.6, y0=12.0, thick=0.15, holes=holes)
+    m.span(lx - 2.4, lx + 6.4, 14.6, 14.85, lz - 2.4, lz + 8.4, "roof", (0.4, 0.2, 0.18))
+    railing(m, lx, lz + 6.0, lx + 2.0, lz + 6.0, 12.0)
+    railing(m, lx + 4.0, lz, lx + 4.0, lz + 6.0, 12.0)
+    railing(m, lx, lz, lx + 4.0, lz, 12.0)
+    m.prop("furniture_desk", lx + 5.0, lz + 3.0, -90.0, y=12.0)
+    m.prop("furniture_chair_desk", lx + 4.3, lz + 3.0, -90.0, y=12.0)
+    m.light(lx + 2.0, 14.2, lz + 3.0, rng=6.0, energy=0.6)
+
+    # --- The treehouse and its rope bridge -----------------------------------------------
+    TY = 4.0
+    m.prop("nature_tree_fat", 16.0, -24.0, 20.0)
+    for (a, b, c, d) in ((4.0, -28.0, 12.0, -20.0), (4.0, -42.0, 10.0, -36.0)):
+        m.span(a, c, TY - 0.2, TY, b, d, "wood", wood)
+        for px in (a + 0.2, c - 0.2):
+            for pz in (b + 0.2, d - 0.2):
+                m.span(px - 0.15, px + 0.15, 0.0, TY - 0.2, pz - 0.15, pz + 0.15, "wood", logs)
+    flight(m, 4.0, 6.0, -20.0, -11.0, 0.0, TY, "n", "wood", wood, thick=0.2)
+    railing(m, 6.0, -20.0, 12.0, -20.0, TY, mat="wood", tint=logs)
+    railing(m, 12.0, -28.0, 12.0, -20.0, TY, mat="wood", tint=logs)
+    railing(m, 4.0, -28.0, 4.0, -20.0, TY, mat="wood", tint=logs)
+    railing(m, 4.0, -28.0, 6.0, -28.0, TY, mat="wood", tint=logs)
+    railing(m, 7.4, -28.0, 12.0, -28.0, TY, mat="wood", tint=logs)
+    m.span(7.0, 11.4, TY + 2.4, TY + 2.55, -27.2, -22.8, "roof", (0.35, 0.45, 0.3))
+    m.wall((7.0, -27.0), (11.2, -27.0), "x", "wood", logs, height=2.4, y0=TY, thick=0.12)
+    m.wall((7.0, -23.0), (11.2, -23.0), "x", "wood", logs, height=2.4, y0=TY, thick=0.12,
+           holes=[(0.5, 1.7, 0.0, 2.0, {"name": "treehouse door", "into": "+", "away": False, "tint": (0.45, 0.6, 0.35)}), (2.4, 3.6, 1.0, 1.8)])
+    m.wall((7.0, -27.0), (7.0, -23.0), "z", "wood", logs, height=2.4, y0=TY, thick=0.12, holes=[(1.4, 2.6, 1.0, 1.8)])
+    m.wall((11.2, -27.0), (11.2, -23.0), "z", "wood", logs, height=2.4, y0=TY, thick=0.12)
+    m.prop("furniture_cardboard_box_open", 10.4, -26.2, 10.0, y=TY)
+    m.prop("furniture_pillow_blue_long", 8.0, -25.0, 0.0, y=TY)
+    # The bridge, plank by plank, to the second platform, and a stair down from it.
+    for i in range(10):
+        m.span(6.0, 7.4, TY - 0.08, TY, -36.0 + i * 0.8, -36.0 + i * 0.8 + 0.6, "wood", wood)
+    m.span(6.0, 7.4, TY - 0.12, TY - 0.08, -36.0, -28.0, "fabric", (0.5, 0.4, 0.3))
+    railing(m, 6.0, -36.0, 6.0, -28.0, TY, height=1.0, mat="fabric", tint=(0.5, 0.4, 0.3))
+    railing(m, 7.4, -36.0, 7.4, -28.0, TY, height=1.0, mat="fabric", tint=(0.5, 0.4, 0.3))
+    railing(m, 4.0, -42.0, 10.0, -42.0, TY, mat="wood", tint=logs)
+    railing(m, 4.0, -42.0, 4.0, -36.0, TY, mat="wood", tint=logs)
+    railing(m, 4.0, -36.0, 6.0, -36.0, TY, mat="wood", tint=logs)
+    railing(m, 7.4, -36.0, 10.0, -36.0, TY, mat="wood", tint=logs)
+    flight(m, 10.0, 18.0, -40.0, -38.4, 0.0, TY, "w", "wood", wood, thick=0.2)
+
+    # --- The lake: a dock, two boats, the boathouse ----------------------------------------
+    m.span(18.0, 32.0, 0.1, 0.3, -12.0, -10.0, "wood", wood)
+    for px in frange(20.0, 32.1, 3.0):
+        for pz in (-11.9, -10.1):
+            m.span(px - 0.1, px + 0.1, -1.2, 0.1, pz - 0.1, pz + 0.1, "wood", logs)
+    lifeboat(m, 26.0, -7.6, -0.6, tint=(0.75, 0.35, 0.2))
+    lifeboat(m, 30.0, -14.6, -0.6, tint=(0.25, 0.45, 0.6))
+    bx0, bx1, bz0, bz1 = 10.0, 18.0, -22.0, -14.0
+    m.room(bx0, bz0, bx1, bz1, "wood_floor", None, height=3.0, ceiling="wood", roof="roof", roof_tint=(0.35, 0.3, 0.26), lights=1, energy=0.7)
+    m.wall((bx0, bz0), (bx1, bz0), "x", "wood", logs, height=3.0, thick=0.25, holes=[(3.0, 5.0, 1.0, 2.0)])
+    m.wall((bx0, bz1), (bx1, bz1), "x", "wood", logs, height=3.0, thick=0.25)
+    m.wall((bx0, bz0), (bx0, bz1), "z", "wood", logs, height=3.0, thick=0.25,
+           holes=[(3.3, 4.7, 0.0, DOOR_H, {"name": "boathouse door", "into": "+", "away": False, "tint": (0.4, 0.28, 0.18)})])
+    m.wall((bx1, bz0), (bx1, bz1), "z", "wood", logs, height=3.0, thick=0.25,
+           holes=[(1.0, 7.0, 0.0, 2.6, {"name": "boathouse doors", "leaves": 2, "into": "+", "away": False, "angle": 88.0, "tint": (0.5, 0.36, 0.24), "seconds": 1.2})])
+    lifeboat(m, 14.8, -18.0, 0.0, tint=(0.6, 0.6, 0.62))
+    m.against("furniture_bookcase_open", "w", bx0 + 0.15, -20.6)
+    m.prop("furniture_cardboard_box_closed", 11.0, -15.0, 15.0)
+
+    # --- The cave in the hillside ----------------------------------------------------------
+    cx0, cx1, cz0, cz1 = -56.0, -34.0, -56.0, -38.0
+    CH = 2.6
+    m.span(cx0, cx1, CH, CH + 1.4, cz0, cz1, "stone", rock)
+    m.span(cx0 + 2.0, cx1 - 2.0, CH + 1.4, CH + 2.4, cz0 + 2.0, cz1 - 2.0, "stone", rock)
+    m.span(cx0, cx1, -0.02, 0.0, cz0, cz1, "dirt", (0.4, 0.36, 0.3))
+    for (a, b, along, holes) in (((cx0, cz1), (cx1, cz1), "x", [(6.0, 8.0, 0.0, 2.2)]),
+                                 ((cx0, cz0), (cx1, cz0), "x", []),
+                                 ((cx0, cz0), (cx0, cz1), "z", []),
+                                 ((cx1, cz0), (cx1, cz1), "z", [(13.0, 14.4, 0.0, CRAWL_H)])):
+        m.wall(a, b, along, "stone", rock, height=CH, thick=1.0, holes=holes, glass=False)
+    crawl(m, cx1 + 0.5, -43.0, cx1 + 5.0, -41.6, "x", mat="stone", tint=rock)
+    m.wall((cx0, -44.0), (cx1, -44.0), "x", "stone", rock, height=CH, thick=0.8, holes=[(10.0, 12.0, 0.0, 2.2)], glass=False)
+    m.wall((-46.0, cz0), (-46.0, -44.0), "z", "stone", rock, height=CH, thick=0.8, holes=[(4.0, 6.0, 0.0, 2.2)], glass=False)
+    m.wall((-40.0, -44.0), (-40.0, cz1), "z", "stone", rock, height=CH, thick=0.8, glass=False)
+    m.wall((-51.0, cz0), (-51.0, -50.0), "z", "stone", rock, height=CH, thick=0.8, glass=False,
+           holes=[(2.0, 3.0, 0.0, 2.0, {"name": "a rock", "secret": True, "hinge": "start"})])
+    m.wall((cx0, -50.0), (-51.0, -50.0), "x", "stone", rock, height=CH, thick=0.8, glass=False)
+    for (lx_, lz_) in ((-48.0, -40.0), (-38.0, -48.0), (-44.0, -52.0)):
+        m.light(lx_, CH - 0.5, lz_, rng=6.0, energy=0.35, colour=(1.0, 0.7, 0.4))
+    m.prop("furniture_cardboard_box_closed", -54.0, -54.0, 10.0)
+    m.prop("furniture_cardboard_box_open", -53.0, -52.4, -20.0)
+    m.prop("nature_mushroom_red_tall", -37.0, -54.0)
+    for (rx, rz) in ((-50.0, -48.0), (-38.0, -42.0)):
+        m.prop("nature_rock_small_a", rx, rz)
+    for (rx, rz, kind) in ((-52.0, -46.0, "nature_rock_large_a"), (-40.0, -52.0, "nature_rock_tall_a"), (-46.0, -40.0, "nature_stone_large_a")):
+        m.prop(kind, rx, rz, 30.0, y=CH + 2.4)
+
+    # --- The archery range and the car park ---------------------------------------------
+    for tz in (22.0, 28.0, 34.0):
+        m.span(44.0, 44.3, 0.6, 2.0, tz - 0.7, tz + 0.7, "fabric", (0.85, 0.2, 0.2))
+        m.span(44.3, 45.1, 0.0, 0.8, tz - 0.6, tz + 0.6, "sand", (0.95, 0.82, 0.45))
+    m.overlay(28.0, 20.0, 46.0, 36.0, "dirt", (0.65, 0.58, 0.45))
+    m.overlay(-12.0, 44.0, 12.0, 60.0, "asphalt")
+    m.overlay(-2.0, 60.0, 2.0, 66.0, "asphalt")
+    for i, x in enumerate((-9.0, -4.0, 4.0, 9.0)):
+        car(m, x, 50.0, "z", [(0.7, 0.12, 0.1), (0.15, 0.3, 0.6), (0.85, 0.85, 0.85), (0.3, 0.5, 0.35)][i])
+    m.prop("nature_sign", 0.0, 42.0, 0.0)
+
+    for (x, z) in ((-3.0, -5.0), (3.0, -5.0), (-6.0, 3.0), (6.0, 3.0), (-2.0, 6.0), (2.0, -2.5), (-13.0, 0.0), (13.0, 0.0)):
+        m.spawn("hiders", x, z)
+    for (x, z) in ((-6.0, 56.0), (-2.0, 56.0), (2.0, 56.0), (6.0, 56.0)):
+        m.spawn("seekers", x, z)
+    return m.build()
+
+
 MAPS = {
     "hs_apartments": apartments,
     "hs_warehouse": warehouse,
@@ -2900,6 +3140,7 @@ MAPS = {
     "hs_mall": mall,
     "hs_ship": ship,
     "hs_castle": castle,
+    "hs_camp": camp,
 }
 
 
