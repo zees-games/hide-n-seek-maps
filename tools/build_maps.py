@@ -656,15 +656,15 @@ def car(m, x, z, along, tint):
         m.span(x - 0.75, x + 0.75, 1.0, 1.5, z - 1.0, z + 0.9, "glass", None)
 
 
-def stall(m, x, z, cloth):
+def stall(m, x, z, cloth, y=0.0):
     """A market stall: a counter, four posts, a cloth roof, boxes under the counter."""
-    m.span(x - 1.3, x + 1.3, 0.0, 0.95, z - 0.5, z + 0.5, "wood", (0.66, 0.5, 0.34))
+    m.span(x - 1.3, x + 1.3, y, y + 0.95, z - 0.5, z + 0.5, "wood", (0.66, 0.5, 0.34))
     for dx in (-1.35, 1.35):
         for dz in (-0.55, 1.6):
-            m.span(x + dx - 0.06, x + dx + 0.06, 0.0, 2.4, z + dz - 0.06, z + dz + 0.06, "wood", (0.55, 0.4, 0.28))
-    m.span(x - 1.55, x + 1.55, 2.4, 2.5, z - 0.75, z + 1.8, "fabric", cloth)
-    m.prop("furniture_cardboard_box_open", x - 0.6, z + 1.0, 10.0)
-    m.prop("furniture_cardboard_box_closed", x + 0.7, z + 1.1, -15.0)
+            m.span(x + dx - 0.06, x + dx + 0.06, y, y + 2.4, z + dz - 0.06, z + dz + 0.06, "wood", (0.55, 0.4, 0.28))
+    m.span(x - 1.55, x + 1.55, y + 2.4, y + 2.5, z - 0.75, z + 1.8, "fabric", cloth)
+    m.prop("furniture_cardboard_box_open", x - 0.6, z + 1.0, 10.0, y=y)
+    m.prop("furniture_cardboard_box_closed", x + 0.7, z + 1.1, -15.0, y=y)
 
 
 def hedge_maze(m, x0, z0, cols, rows, cell, seed, height=2.3, gate_w=1, gate_e=None):
@@ -2285,6 +2285,297 @@ def mall():
     return m.build()
 
 
+def switchback(m, sx, zf, zb, y0, y1, mat="metal", tint=(0.55, 0.57, 0.6), run=2.0):
+    """One storey of a switchback stair in x sx..sx+4, entered from the corridor at z `zf` and
+    turning at `zb` (zb < zf): up the west half away from the corridor, round a landing at the
+    back, and up the east half towards it. Stack one per storey; the upper floor wants a hole
+    (sx, zb, sx + 4, zf)."""
+    half = (y1 - y0) / 2
+    flight(m, sx, sx + 2.0, zf - run, zf, y0, y0 + half, "n", mat, tint, thick=0.2)
+    m.span(sx, sx + 4.0, y0 + half - 0.15, y0 + half, zb, zf - run, mat, tint)
+    flight(m, sx + 2.0, sx + 4.0, zf - run, zf, y0 + half, y1, "s", mat, tint, thick=0.2)
+    railing(m, sx + 2.0, zf - run, sx + 2.0, zf, y0 + half, height=0.9)
+
+
+def lifeboat(m, x, z, y, tint=(0.95, 0.5, 0.15)):
+    """An open boat 6 m by 2.2 sitting on the deck in two chocks: sides a metre high, so a
+    person crouched in it is out of sight of anybody on the deck."""
+    m.span(x - 3.0, x + 3.0, y + 0.3, y + 0.45, z - 1.1, z + 1.1, "wood", (0.7, 0.55, 0.4))
+    m.span(x - 3.0, x + 3.0, y + 0.3, y + 1.3, z - 1.1, z - 0.98, "metal", tint)
+    m.span(x - 3.0, x + 3.0, y + 0.3, y + 1.3, z + 0.98, z + 1.1, "metal", tint)
+    m.span(x - 3.0, x - 2.88, y + 0.3, y + 1.3, z - 0.98, z + 0.98, "metal", tint)
+    m.span(x + 2.88, x + 3.0, y + 0.3, y + 1.3, z - 0.98, z + 0.98, "metal", tint)
+    for cx in (x - 1.8, x + 1.8):
+        m.span(cx - 0.2, cx + 0.2, y, y + 0.3, z - 0.8, z + 0.8, "wood", (0.4, 0.3, 0.22))
+    m.span(x - 0.6, x + 0.6, y + 0.45, y + 0.8, z - 0.98, z + 0.98, "wood", (0.6, 0.45, 0.32))
+
+
+def ship():
+    """The Marigold: a ship at her quay, four decks from the engine room to the bridge.
+
+    A ship is the genre's best way round: two stairwells run the whole height, the promenades
+    run the whole length on both sides, and the sun deck's stairs come down at both ends, so a
+    chase never runs out of ship. The sea is all round it, and a hider who goes over the side is
+    caught by it. The engine room is the place to crawl, among the machinery, and its after
+    bulkhead has a panel that slides on the steering-gear room."""
+    m = Map(
+        "hs_ship", "The Marigold",
+        "A ship at her quay: cabins, saloons, the engine room, lifeboats and the bridge. Don't go over the side.",
+        {"sky_top": [0.3, 0.5, 0.8], "sky_horizon": [0.8, 0.86, 0.92], "ground": [0.2, 0.3, 0.38],
+         "sun_pitch": -42, "sun_yaw": 200, "sun_energy": 1.1, "sun_colour": [1.0, 0.96, 0.88],
+         "ambient": [0.6, 0.66, 0.74], "ambient_energy": 0.5, "fog": 0.0015},
+        kill_y=-5.0,
+    )
+    X0, X1, BOW = -40.0, 36.0, 46.0
+    B = 9.0
+    E, L, M, S = -3.2, 0.0, 3.2, 6.4
+    H = 3.2
+    hull = (0.18, 0.22, 0.32)
+    white = (0.94, 0.94, 0.92)
+    teak = (0.62, 0.46, 0.32)
+    inside = (0.9, 0.87, 0.8)
+
+    def half_at(x):
+        return B if x <= X1 else max(0.0, B * (1.0 - (x - X1) / (BOW - X1)))
+
+    # The sea, round the hull and the quay, and its bed far enough down that over the side is
+    # a catch. The surface is left out where the hull is, or it is drawn in the engine room.
+    m.span(-90, 90, -12.2, -12.0, -60, 70, "sand", (0.3, 0.32, 0.3))
+    for (a, b, c, d) in ((-90, -60, 90, -B), (-90, B, 90, 12.0), (-90, -B, X0, B)):
+        m.span(a, c, -1.05, -1.0, b, d, "water", None, solid=False)
+    x = X1
+    while x < 90:
+        hw = half_at(x)
+        m.span(x, x + 1.0, -1.05, -1.0, -B, -hw, "water", None, solid=False)
+        m.span(x, x + 1.0, -1.05, -1.0, hw, B, "water", None, solid=False)
+        x += 1.0
+    m.span(-90, 90, -1.05, -1.0, 40.0, 70.0, "water", None, solid=False)
+
+    # --- The hull -------------------------------------------------------------
+    m.span(X0, X1, E - 0.4, E, -B, B, "metal", hull)
+    m.span(X0 - 0.3, X0, E - 0.4, M + 1.1, -B, B, "metal", hull)
+    for zs in (-1, 1):
+        portholes = [(4.0 * i + 1.6, 4.0 * i + 2.4, 1.2, 1.9) for i in range(1, 18)]
+        m.wall((X0, zs * B), (X1, zs * B), "x", "metal", hull, height=H, y0=E, thick=0.3, glass=False)
+        m.wall((X0, zs * B), (X1, zs * B), "x", "metal", hull, height=H, y0=L, thick=0.3, holes=portholes)
+        gangway = [(40.0, 42.0, 0.0, 1.1), (4.0, 6.0, 0.0, 1.1)] if zs > 0 else []
+        m.wall((X0, zs * B), (X1, zs * B), "x", "metal", white, height=1.1, y0=M, thick=0.3, holes=gangway, glass=False)
+    # The bow: its sides raked in to a point, decks laid in strips under them.
+    rake = math.degrees(math.atan2(B, BOW - X1))
+    length = math.hypot(B, BOW - X1)
+    for zs in (-1, 1):
+        m.box(((X1 + BOW) / 2, (L + M) / 2 - 0.2, zs * B / 2), (length + 0.4, H + 0.4, 0.8), "metal", hull, yaw=zs * rake)
+        m.box(((X1 + BOW) / 2, M + 0.55, zs * B / 2), (length + 0.4, 1.1, 0.8), "metal", white, yaw=zs * rake)
+    x = X1
+    while x < BOW - 0.5:
+        hw = half_at(x)
+        m.span(x, x + 0.5, E - 0.4, L, -hw, hw, "metal", hull)
+        m.span(x, x + 0.5, L - 0.02, L, -hw + 0.4, hw - 0.4, "metal", (0.5, 0.5, 0.5))
+        m.span(x, x + 0.5, M - 0.2, M, -hw, hw, "wood", teak)
+        x += 0.5
+    m.wall((X1, -B), (X1, B), "z", "metal", hull, height=H, y0=E, thick=0.3)
+
+    # --- Decks ----------------------------------------------------------------
+    stairs = [(-28.0, -24.0), (16.0, 20.0)]
+    holes = [(a, -6.0, b, -1.9) for a, b in stairs]
+    m.floor(X0, -B, X1, B, "metal", (0.5, 0.52, 0.5), y=E)
+    slab(m, X0, -B, X1, B, L, holes, "carpet", (0.5, 0.25, 0.25))
+    slab(m, X0, -B, X1, B, M, holes, "wood", teak)
+    slab(m, -32.0, -B, 30.0, B, S, holes, "wood", teak)
+    for sx, _ in stairs:
+        for y0, y1 in ((E, L), (L, M), (M, S)):
+            switchback(m, sx, -1.9, -6.0, y0, y1)
+            m.wall((sx, -6.0), (sx, -1.4), "z", "metal", white, height=H, y0=y0)
+            m.wall((sx + 4.0, -6.0), (sx + 4.0, -1.4), "z", "metal", white, height=H, y0=y0)
+            m.wall((sx, -6.0), (sx + 4.0, -6.0), "x", "metal", white, height=H, y0=y0)
+        railing(m, sx, -1.9, sx + 2.0, -1.9, S)
+        railing(m, sx, -6.0, sx, -1.9, S)
+        railing(m, sx + 4.0, -6.0, sx + 4.0, -1.9, S)
+        railing(m, sx, -6.0, sx + 4.0, -6.0, S)
+
+    # --- The engine room --------------------------------------------------------
+    for (ex, ez) in ((-20.0, -4.5), (-20.0, 4.5), (-8.0, -4.5), (-8.0, 4.5)):
+        m.span(ex - 4.0, ex + 4.0, E, E + 2.2, ez - 1.4, ez + 1.4, "metal", (0.35, 0.4, 0.38))
+        m.span(ex - 3.6, ex + 3.6, E + 2.2, E + 2.5, ez - 0.6, ez + 0.6, "metal", (0.5, 0.2, 0.15))
+    for gx in (4.0, 10.0, 16.0):
+        m.span(gx - 1.6, gx + 1.6, E, E + 1.8, 3.4, 6.6, "metal", (0.55, 0.5, 0.2))
+    crawl(m, 2.0, -7.6, 18.0, -6.2, "x", y=E, mat="metal", tint=(0.4, 0.42, 0.45))
+    for zz in (-8.4, 8.4):
+        m.span(X0 + 2, 30.0, E + 2.4, E + 2.7, zz - 0.15, zz + 0.15, "metal", (0.6, 0.3, 0.2))
+    lights_over(m, -30.0, -B, X1, B, L - 0.2, energy=0.8, colour=(1.0, 0.88, 0.7))
+    # The steering-gear room behind the after bulkhead: its door is a panel of the bulkhead.
+    m.wall((-32.0, -B), (-32.0, B), "z", "metal", (0.45, 0.48, 0.46), height=H, y0=E,
+           holes=[(12.0, 13.0, 0.0, 2.1, {"name": "panel", "secret": True, "hinge": "end"})])
+    m.span(-38.0, -35.0, E, E + 1.6, -1.0, 1.0, "metal", (0.5, 0.2, 0.15))
+    m.prop("furniture_cardboard_box_closed", -34.0, -6.0, 20.0, y=E)
+    m.light(-36.0, L - 0.6, 0.0, rng=6.0, energy=0.4, colour=(1.0, 0.6, 0.4))
+
+    # --- The cabin deck -----------------------------------------------------------
+    for zs in (-1, 1):
+        m.wall((X0, zs * 1.4), (X1, zs * 1.4), "x", "paint", inside, height=H, y0=L,
+               holes=[(4.0 * i + 0.4, 4.0 * i + 1.8, 0.0, DOOR_H, {"name": "cabin door", "into": "-" if zs < 0 else "+", "tint": (0.45, 0.32, 0.22)})
+                      for i in range(19) if not (zs < 0 and X0 + 4.0 * i in (-28.0, 16.0)) and X0 + 4.0 * i not in (-40.0, -36.0)] +
+                     ([(12.0, 16.0, 0.0, H), (56.0, 60.0, 0.0, H)] if zs < 0 else []))
+        for i in range(19):
+            cx = X0 + 4.0 * i
+            if cx in (-40.0, -36.0):
+                continue
+            if not (zs < 0 and cx == 16.0):
+                m.wall((cx, zs * 1.4), (cx, zs * (B - 0.15)), "z", "paint", inside, height=H, y0=L)
+            if zs < 0 and cx in (-28.0, 16.0):
+                continue
+            zb = zs * (B - 0.15)
+            m.against("furniture_bed_single", "e", cx + 3.9, zs * 5.6, y=L)
+            m.against("furniture_bookcase_closed_doors", "w", cx + 0.1, zs * 6.6, y=L)
+            m.prop("furniture_cabinet_bed_drawer", cx + 3.4, zs * 7.9, 0.0 if zs < 0 else 180.0, y=L)
+            m.prop("furniture_rug_rectangle", cx + 2.0, zs * 4.0, y=L)
+    m.wall((X0, -1.4), (X0, 1.4), "z", "metal", hull, height=H, y0=L)
+    m.wall((X1, -B), (X1, B), "z", "paint", inside, height=H, y0=L,
+           holes=[(7.6, 9.0, 0.0, DOOR_H, {"name": "store door", "into": "+", "away": False, "mat": "metal", "tint": (0.5, 0.52, 0.55)})])
+    for (bx, bz) in ((39.0, -2.0), (39.6, 1.4), (41.0, -0.4), (38.4, 3.0)):
+        m.prop("furniture_cardboard_box_closed", bx, bz, bx * 13, y=L)
+    m.span(37.0, 39.0, L, L + 1.2, -5.0, -3.6, "wood", (0.6, 0.45, 0.3))
+    lights_over(m, X0, -1.4, X1, 1.4, M - 0.2, energy=0.8)
+    for i in range(19):
+        cx = X0 + 4.0 * i
+        for zs in (-1, 1):
+            if (zs < 0 and cx in (-28.0, 16.0)) or cx in (-40.0, -36.0):
+                continue
+            m.light(cx + 2.0, M - 0.6, zs * 5.0, rng=5.0, energy=0.6)
+    m.span(-40.0, -32.0, L, M - 0.2, -B, -1.4, "metal", hull)
+    m.span(-40.0, -32.0, L, M - 0.2, 1.4, B, "metal", hull)
+
+    # --- The main deck: saloons inside, promenades outside -------------------------
+    SX0, SX1, SZ = -32.0, 30.0, 6.0
+    for zs in (-1, 1):
+        windows = [(x0 + 1.0, x0 + 3.0, 0.9, 2.3) for x0 in frange(9.0, 52.0, 4.0)]
+        doors = [(1.0, 2.4, 0.0, DOOR_H, {"name": "promenade door", "into": "-" if zs > 0 else "+", "tint": (0.45, 0.32, 0.22)}),
+                 (55.0, 56.4, 0.0, DOOR_H, {"name": "promenade door", "into": "-" if zs > 0 else "+", "tint": (0.45, 0.32, 0.22)})]
+        m.wall((SX0, zs * SZ), (SX1, zs * SZ), "x", "paint", white, height=H, y0=M, holes=doors + windows, inner="paint", inner_tint=inside)
+    m.wall((SX0, -SZ), (SX0, SZ), "z", "paint", white, height=H, y0=M,
+           holes=[(4.6, 7.4, 0.0, DOOR_H, {"name": "aft doors", "leaves": 2, "into": "-", "away": False, "angle": 88.0, "tint": (0.45, 0.32, 0.22)})])
+    m.wall((SX1, -SZ), (SX1, SZ), "z", "paint", white, height=H, y0=M,
+           holes=[(4.6, 7.4, 0.0, DOOR_H, {"name": "forward doors", "leaves": 2, "into": "+", "away": False, "angle": 88.0, "tint": (0.45, 0.32, 0.22)})])
+    for wx, name in ((-24.0, "dining room doors"), (-4.0, "lounge doors"), (14.0, "lobby doors")):
+        m.wall((wx, -SZ), (wx, SZ), "z", "paint", inside, height=H, y0=M,
+               holes=[(4.6, 7.4, 0.0, DOOR_H, {"name": name, "leaves": 2, "into": "+", "tint": (0.45, 0.32, 0.22)})])
+    for (a, b) in ((SX0, -24.0), (-24.0, -4.0), (-4.0, 14.0), (14.0, SX1)):
+        lights_over(m, a, -SZ, b, SZ, S - 0.2, energy=1.0, colour=(1.0, 0.9, 0.78))
+    # The dining room.
+    for tx in (-21.0, -16.0, -11.0, -6.5):
+        for tz in (-3.5, 0.0, 3.5):
+            t = m.prop("furniture_table_cloth", tx, tz, 90.0, y=M)
+            m.prop("furniture_chair_cushion", tx - 0.85, tz, 90.0, y=M)
+            m.prop("furniture_chair_cushion", tx + 0.85, tz, -90.0, y=M)
+    # The lounge and its bar.
+    for i in range(5):
+        m.prop("furniture_kitchen_bar", 1.0 + i, -5.4, 0.0, y=M)
+        m.prop("furniture_stool_bar", 1.0 + i, -4.5, 0.0, y=M)
+    m.against("furniture_kitchen_fridge_large", "e", 13.85, -4.6, y=M)
+    for (sx_, sz_, yaw) in ((0.0, 2.0, 90.0), (6.0, 4.6, 180.0), (10.5, 1.0, -90.0)):
+        m.prop("furniture_lounge_sofa", sx_, sz_, yaw, y=M)
+    m.prop("furniture_table_coffee", 3.2, 2.0, y=M)
+    m.prop("furniture_table_coffee", 8.0, 2.0, y=M)
+    m.prop("furniture_rug_round", 5.0, 2.0, y=M)
+    m.prop("furniture_potted_plant", -3.4, -5.4, y=M)
+    # The lobbies: the stairs, the purser's desk, benches, plants.
+    m.prop("furniture_desk", 17.0, 4.6, 180.0, y=M)
+    m.prop("furniture_chair_desk", 17.0, 5.4, 180.0, y=M)
+    m.prop("furniture_bench_cushion", 28.6, 2.0, -90.0, y=M)
+    m.prop("furniture_potted_plant", 29.2, 5.4, y=M)
+    m.prop("furniture_bench_cushion", -25.0, 4.6, 180.0, y=M)
+    m.prop("furniture_potted_plant", -31.4, 5.4, y=M)
+    # The promenades: deck chairs and life rings, the covered side of the sun deck over them.
+    for zs in (-1, 1):
+        for x in frange(-28.0, 28.0, 7.0):
+            m.prop("furniture_lounge_chair_relax", x, zs * 7.6, 0.0 if zs > 0 else 180.0, y=M)
+        for x in frange(-30.0, 30.0, 12.0):
+            m.light(x, S - 0.5, zs * 7.5, rng=7.0, energy=0.6)
+
+    # Aft and forward open decks: bollards, coils, and the stairs up to the sun deck.
+    for (bx, bz) in ((-38.0, -6.0), (-38.0, 6.0), (40.0, -2.0), (40.0, 2.0)):
+        m.span(bx - 0.3, bx + 0.3, M, M + 0.7, bz - 0.3, bz + 0.3, "metal", (0.2, 0.2, 0.22))
+    flight(m, -39.6, -32.0, 6.4, 8.6, M, S, "e", "wood", teak, thick=0.2)
+    flight(m, 30.0, 37.6, -8.6, -6.4, M, S, "w", "wood", teak, thick=0.2)
+    m.prop("furniture_cardboard_box_closed", -36.0, -3.0, 15.0, y=M)
+    m.prop("furniture_cardboard_box_closed", -35.4, -2.6, 50.0, y=M)
+    m.span(41.5, 43.5, M, M + 0.9, -0.8, 0.8, "metal", (0.3, 0.3, 0.3))
+
+    # --- The sun deck ---------------------------------------------------------------
+    for zs in (-1, 1):
+        railing(m, -32.0, zs * B, 30.0, zs * B, S, height=1.1, mat="metal", tint=white)
+    railing(m, -32.0, -B, -32.0, 6.4, S, height=1.1, tint=white)
+    railing(m, 30.0, -6.4, 30.0, B, S, height=1.1, tint=white)
+    # The pool, raised, with water a crouching person sits under the edge of.
+    m.span(-8.0, 2.0, S, S + 1.0, -3.2, -3.0, "tile_small", (0.85, 0.92, 0.95))
+    m.span(-8.0, 2.0, S, S + 1.0, 3.0, 3.2, "tile_small", (0.85, 0.92, 0.95))
+    m.span(-8.0, -7.8, S, S + 1.0, -3.0, 3.0, "tile_small", (0.85, 0.92, 0.95))
+    m.span(1.8, 2.0, S, S + 1.0, -3.0, 3.0, "tile_small", (0.85, 0.92, 0.95))
+    m.span(-7.8, 1.8, S + 0.75, S + 0.8, -3.0, 3.0, "water", None, solid=False)
+    flight(m, 2.0, 2.9, -0.6, 0.6, S, S + 1.0, "w", "tile_small", (0.85, 0.92, 0.95), thick=0.2)
+    for x in (-14.0, -11.5, 5.5, 8.0):
+        for zs in (-1, 1):
+            m.prop("furniture_lounge_chair_relax", x, zs * 4.4, 90.0 if zs > 0 else -90.0, y=S)
+    stall(m, 12.0, 2.0, (0.2, 0.5, 0.6), y=S)
+    # The funnel, the lifeboats along both rails, the bridge forward and its roof.
+    m.span(-22.0, -16.0, S, S + 7.0, -2.6, 2.6, "metal", (0.85, 0.3, 0.2))
+    m.span(-22.0, -16.0, S + 7.0, S + 7.8, -2.6, 2.6, "metal", (0.15, 0.15, 0.15))
+    for x in (-26.0, -9.0, 8.0):
+        lifeboat(m, x, -7.5, S)
+        lifeboat(m, x, 7.5, S)
+    bx0, bx1 = 22.0, 30.0
+    m.wall((bx0, -5.0), (bx1, -5.0), "x", "paint", white, height=2.8, y0=S, holes=[(1.0, 2.4, 0.0, DOOR_H, {"name": "bridge door", "into": "+"})])
+    m.wall((bx0, 5.0), (bx1, 5.0), "x", "paint", white, height=2.8, y0=S, holes=[(5.0, 6.4, 0.0, DOOR_H, {"name": "bridge door", "into": "-"})])
+    m.wall((bx0, -5.0), (bx0, 5.0), "z", "paint", white, height=2.8, y0=S, holes=[(1.0, 3.0, 1.0, 2.2), (7.0, 9.0, 1.0, 2.2)])
+    m.wall((bx1, -5.0), (bx1, 5.0), "z", "paint", white, height=2.8, y0=S, holes=[(0.6, 9.4, 1.0, 2.4)])
+    m.span(bx0 - 0.2, bx1 + 0.2, S + 2.8, S + 3.0, -5.2, 5.2, "metal", white)
+    for zz in frange(-3.5, 3.6, 1.0):
+        bar = m.prop("furniture_kitchen_bar", 28.9, zz, -90.0, y=S)
+    m.on("furniture_computer_screen", bar, yaw=-90.0)
+    m.prop("furniture_chair_desk", 27.6, 0.0, -90.0, y=S)
+    m.prop("furniture_desk", 24.0, -3.4, 0.0, y=S)
+    m.light(26.0, S + 2.3, 0.0, rng=7.0, energy=0.8)
+    # Up to the bridge's roof: a stair along its west end, arriving through a gap in the rail.
+    flight(m, 14.6, bx0 - 0.2, 3.8, 5.2, S, S + 3.0, "e", "metal", white, thick=0.2)
+    railing(m, bx0, -5.2, bx1, -5.2, S + 3.0, tint=white)
+    railing(m, bx0, 5.2, bx1, 5.2, S + 3.0, tint=white)
+    railing(m, bx1, -5.2, bx1, 5.2, S + 3.0, tint=white)
+    railing(m, bx0, -5.2, bx0, 3.7, S + 3.0, tint=white)
+    m.span(25.4, 25.6, S + 3.0, S + 6.0, -0.1, 0.1, "metal", white)
+
+    # --- The quay ---------------------------------------------------------------
+    QY = 2.0
+    m.span(-90, 90, -12.0, QY, 12.0, 40.0, "concrete", (0.6, 0.6, 0.58))
+    for (gx0, gx1) in ((-36.0, -34.0), (0.0, 2.0)):
+        # A gangway: steps up from the quay, then a plate across the water at the deck's height.
+        m.span(gx0, gx1, M - 0.08, M, 9.0, 12.4, "metal", (0.5, 0.52, 0.55))
+        flight(m, gx0, gx1, 12.4, 15.0, QY, M, "n", "metal", (0.5, 0.52, 0.55), thick=0.15)
+        railing(m, gx0, 9.2, gx0, 12.4, M, height=1.0)
+        railing(m, gx1, 9.2, gx1, 12.4, M, height=1.0)
+    m.span(-90, 90, QY, QY + 0.08, 12.0, 12.4, "metal", (0.9, 0.75, 0.2), solid=False)
+    container(m, -24.0, 22.0, "x", y=QY, open_end="e", tint=(0.2, 0.35, 0.6))
+    container(m, -24.0, 24.6, "x", y=QY, open_end="e", tint=(0.6, 0.2, 0.18), doors="open")
+    container(m, 14.0, 26.0, "z", y=QY, open_end="s", tint=(0.3, 0.5, 0.35))
+    for (cx, cz) in ((-6.0, 30.0), (-4.6, 30.0), (-5.3, 30.0), (24.0, 18.0)):
+        m.span(cx - 0.6, cx + 0.6, QY, QY + 1.2, cz - 0.6, cz + 0.6, "wood", (0.66, 0.5, 0.34))
+    room_at(m, 30.0, 26.0, 40.0, 34.0, QY, "tile", None, height=3.0, lights=1)
+    for zz, holes in ((26.0, [(2.0, 3.4, 0.0, DOOR_H, {"name": "ticket office door", "into": "+"}), (5.0, 8.0, 1.0, 2.2)]), (34.0, [])):
+        m.wall((30.0, zz), (40.0, zz), "x", "brick", None, height=3.0, y0=QY, thick=OUTER, holes=holes)
+    m.wall((30.0, 26.0), (30.0, 34.0), "z", "brick", None, height=3.0, y0=QY, thick=OUTER)
+    m.wall((40.0, 26.0), (40.0, 34.0), "z", "brick", None, height=3.0, y0=QY, thick=OUTER)
+    for (bx, bz) in ((-30.0, 13.0), (-10.0, 13.0), (10.0, 13.0), (30.0, 13.0)):
+        m.span(bx - 0.3, bx + 0.3, QY, QY + 0.7, bz - 0.3, bz + 0.3, "metal", (0.2, 0.2, 0.22))
+    # The quay's fence on three sides; the fourth is the water.
+    for (a, b, c, d) in ((-60.4, 12.0, -60.0, 40.4), (60.0, 12.0, 60.4, 40.4), (-60.4, 40.0, 60.4, 40.4)):
+        m.span(a, c, QY, QY + 2.6, b, d, "metal", (0.4, 0.42, 0.45))
+
+    for (x, z) in ((-17.5, 7.6), (-10.5, 7.6), (-3.5, -7.6), (10.5, -7.6), (-13.5, 0.0), (6.0, -1.0), (17.5, 7.6), (-24.5, -7.6)):
+        m.spawn("hiders", x, z, y=M + 0.05)
+    for (x, z) in ((-8.0, 20.0), (-4.0, 20.0), (4.0, 20.0), (8.0, 20.0)):
+        m.spawn("seekers", x, z, y=QY + 0.05)
+    return m.build()
+
+
 MAPS = {
     "hs_apartments": apartments,
     "hs_warehouse": warehouse,
@@ -2293,6 +2584,7 @@ MAPS = {
     "hs_park": park,
     "hs_school": school,
     "hs_mall": mall,
+    "hs_ship": ship,
 }
 
 
