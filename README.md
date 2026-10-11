@@ -1,4 +1,4 @@
-The maps for [**game-hide-n-seek**](https://github.com/gamemann/game-hide-n-seek): a block of flats with a roof and a fire escape, a warehouse on the quay, a manor with a hedge maze, a village, a park, a school, a shopping mall, a ship, a castle, a summer camp and a museum. Eleven maps, plus the practice house built into the game.
+The maps for [**game-hide-n-seek**](https://github.com/zees-games/game-hide-n-seek): a block of flats with a roof and a fire escape, a warehouse on the quay, a manor with a hedge maze, a village, a park, a school, a shopping mall, a ship, a castle, a summer camp and a museum. Eleven maps, plus the practice house built into the game.
 
 Every map is a **JSON document**, not a scene. A server reads the documents in its map directory and sends the one it is playing to every client when the map changes, so players need no map files at all and a new map is one file dropped into a directory. [`maps/README.md`](maps/README.md) is the format.
 
