@@ -52,4 +52,6 @@ From game-hide-n-seek: `./game.sh test headless_maps headless_climb`, and look a
 
 **This repository is a pack of its own, mounted on the server alone.** A server owner names it (`gamemann/hide-n-seek-maps`) in their map config; the game adds that mount's `maps/` to its catalogue (`HsModule._add_delivered_maps`). It is never in a client's content sync: a client is sent the one document being played. `.github/workflows/release.yml` runs `build_maps.py --check` and then dot-ci's release with `pack: true`. dot-server-deploy's `content/hideseek_maps/` and `examples/hideseek_client` (22 checks) prove the delivered pair works over a real socket.
 
+`project.godot` exists only so dot-ci's release can import this repository and attach the `-pack.zip`; it carries the editor's own header and no comments, because the editor rewrites the file on its first save and a checkout would show it modified.
+
 **Not yet on GitHub** (2026-10-10): the remote is set, the repository is the owner's to create, and nothing is pushed or published.
