@@ -35,6 +35,8 @@ The brief asked for maps as interactive as the genre's best, and what those have
 
 `headless_maps` swings every door each way it can go and fails one that passes through a wall or a prop, and sends a ray through every doorway with its door open.
 
+**An open panel must leave a body's width (0.8 m) round its free edge, and a door pinned to open one way wants 2 m of floor clear of its swing on that side** to be opened from: game-hide-n-seek's stand-ins walk round a panel's free edge and step out of a swing before using a door, and `headless_bots` found the places where neither could happen (a back door spanning the strip to a yard wall, a court gate beside a bench, a balcony door across a stair top, a boathouse door between wall and boat, a shed door over its boxes, a cottage's front door on its partition and its bed in the bedroom door's swing).
+
 ## Things the builder decides for you
 
 - **Spawns are settled and faced** (mg-prop-hunt-maps' finding, kept): a spawn a prop later landed on is moved to the nearest clear floored spot and printed; every spawn faces the middle of the furniture.

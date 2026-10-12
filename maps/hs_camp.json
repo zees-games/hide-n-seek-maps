@@ -14021,7 +14021,7 @@
    "hinge": "right",
    "mat": "wood",
    "yaw": 90.0,
-   "angle": 100.0,
+   "angle": -100.0,
    "away": false,
    "tint": [
     0.4,

@@ -977,7 +977,10 @@ def apartments():
         m.span(ax - 0.6, ax + 0.6, TOP, TOP + 1.1, -10.0, -8.9, "metal", (0.85, 0.86, 0.86))
     m.wall((-6.0, 1.5), (-1.0, 1.5), "x", "wood", (0.6, 0.45, 0.3), height=2.2, y0=TOP, thick=0.12)
     m.wall((-6.0, 4.5), (-1.0, 4.5), "x", "wood", (0.6, 0.45, 0.3), height=2.2, y0=TOP, thick=0.12,
-           holes=[(1.8, 3.0, 0.0, 2.0, {"name": "shed door", "into": "+", "tint": (0.45, 0.32, 0.22)})])
+           # Hung from its east end, so it opens against the empty half: from the west end it
+           # closed off the boxes' corner, and a hider going behind it stood at it ten seconds
+           # (game-hide-n-seek's headless_bots).
+           holes=[(1.8, 3.0, 0.0, 2.0, {"name": "shed door", "into": "+", "hinge": "end", "tint": (0.45, 0.32, 0.22)})])
     m.wall((-6.0, 1.5), (-6.0, 4.5), "z", "wood", (0.6, 0.45, 0.3), height=2.2, y0=TOP, thick=0.12)
     m.wall((-1.0, 1.5), (-1.0, 4.5), "z", "wood", (0.6, 0.45, 0.3), height=2.2, y0=TOP, thick=0.12)
     m.span(-6.2, -0.8, TOP + 2.2, TOP + 2.35, 1.3, 4.7, "roof")
@@ -1025,7 +1028,10 @@ def apartments():
     m.span(12.0, 21.0, 2.4, 2.5, -25.6, -22.0, "roof")
     for px in (12.1, 16.5, 20.9):
         m.span(px - 0.08, px + 0.08, 0.0, 2.4, -22.1, -21.9, "metal")
-    m.span(-15.0, 9.0, 0.0, 0.9, -13.5, -13.2, "brick")
+    # The low wall stops short of the back door: it stood 1.2 m off the building, so the door
+    # opened out spanned the strip between them and left nobody a way round its panel
+    # (game-hide-n-seek's headless_bots, a stand-in at it for fourteen seconds).
+    m.span(-12.5, 9.0, 0.0, 0.9, -13.5, -13.2, "brick")
 
     # The corner shop to the east: aisles of shelves, a counter, a back room.
     sx0, sx1, sz0, sz1 = 13.0, 22.0, -6.0, 6.0
@@ -1442,7 +1448,11 @@ def village():
         m.room(x0, z0, x1, z1, "wood_floor", None, height=2.8, roof_tint=(0.55, 0.28, 0.22), eave=0.5, lights=1, energy=0.9)
         inward = "+" if face == "n" else "-"
         painted = [(0.3, 0.42, 0.6), (0.55, 0.2, 0.18), (0.25, 0.45, 0.32), (0.85, 0.75, 0.4), (0.3, 0.3, 0.32), (0.5, 0.36, 0.5)][idx % 6]
-        front = [(1.0, 2.6, SILL, HEAD), (3.8, 5.2, 0.0, DOOR_H, {"name": "front door", "into": inward, "tint": painted}), (6.4, 8.0, SILL, HEAD)]
+        # The front door is the living room's, a metre clear of the partition: at 3.8-5.2 the
+        # partition met the front wall inside the doorway, and a stand-in going for the bedroom
+        # stood in the 1 m left between them (game-hide-n-seek's headless_bots). Hung from the
+        # partition's end, so opened out it clears the next garden's fence post.
+        front = [(0.6, 2.0, SILL, HEAD), (2.6, 4.0, 0.0, DOOR_H, {"name": "front door", "into": inward, "hinge": "end", "tint": painted}), (6.4, 8.0, SILL, HEAD)]
         # The back door opens out, into the garden: inward, the stove is behind it.
         back = [(1.0, 2.4, 0.0, DOOR_H, {"name": "back door", "into": inward, "away": False}), (6.4, 8.0, SILL, HEAD)]
         m.wall((x0, z0), (x1, z0), "x", "plaster", tint, height=2.8, thick=OUTER, holes=front if face == "n" else back)
@@ -1457,7 +1467,10 @@ def village():
         m.prop("furniture_chair", cx - 1.4, cz + (2.1 if face == "n" else -2.1), 180.0 if face == "n" else 0.0)
         m.against("furniture_kitchen_stove", "w", x0 + 0.15, cz + (2.5 if face == "n" else -2.5))
         m.against("furniture_bookcase_closed", "w", x0 + 0.15, cz + (-2.4 if face == "n" else 2.4))
-        m.prop("furniture_bed_single", x1 - 1.2, cz, 0.0)
+        # Against the far wall: the bedroom door opens into the room only, and with the bed a
+        # metre further in there was no floor clear of its swing to open it from, so a stand-in
+        # leaving the bedroom stood at it (game-hide-n-seek's headless_bots).
+        m.prop("furniture_bed_single", x1 - 0.85, cz, 0.0)
         m.against("furniture_bookcase_closed_doors", "e", x1 - 0.15, cz + (2.6 if face == "n" else -2.6))
         m.prop("furniture_cabinet_bed_drawer", cx + 1.2, cz + (-2.8 if face == "n" else 2.8))
         # The garden behind: a low fence with a gate, a vegetable patch or a woodpile.
@@ -1657,7 +1670,7 @@ def park():
     m.room(tx0, tz0, tx1, tz1, "tile_small", None, height=2.8, lights=2, energy=1.0)
     m.wall((tx0, tz0), (tx1, tz0), "x", "brick", None, height=2.8, thick=OUTER,
            holes=[(1.0, 2.4, 0.0, DOOR_H, {"name": "toilet door", "into": "+", "tint": (0.3, 0.45, 0.6)}),
-                  (7.6, 9.0, 0.0, DOOR_H, {"name": "toilet door", "into": "+", "tint": (0.6, 0.3, 0.4)})])
+                  (7.6, 9.0, 0.0, DOOR_H, {"name": "toilet door", "into": "+", "hinge": "end", "tint": (0.6, 0.3, 0.4)})])
     m.wall((tx0, tz1), (tx1, tz1), "x", "brick", None, height=2.8, thick=OUTER)
     m.wall((tx0, tz0), (tx0, tz1), "z", "brick", None, height=2.8, thick=OUTER)
     m.wall((tx1, tz0), (tx1, tz1), "z", "brick", None, height=2.8, thick=OUTER)
@@ -1677,8 +1690,11 @@ def park():
     m.span(-30.05, -29.95, 0.0, 1.0, cz0 + 0.5, cz1 - 0.5, "fabric", (0.15, 0.15, 0.15))
     fence(m, cx0, cz0, cx1, cz1, height=3.0, mat="metal", tint=(0.4, 0.42, 0.45), gaps=[("e", 7.0, 9.0)],
           gate={"name": "court gate", "into": "+", "leaves": 2, "open": True})
-    m.prop("furniture_bench", -18.6, -30.0, -90.0)
-    m.prop("furniture_cardboard_box_open", -18.6, -32.0, 10.0)
+    # Clear of the gate: by it, the bench left no room round the open leaf's free edge, and a
+    # stand-in stood in the corner between leaf, fence and bench (game-hide-n-seek's
+    # headless_bots, eighteen seconds).
+    m.prop("furniture_bench", -18.6, -33.0, -90.0)
+    m.prop("furniture_cardboard_box_open", -18.6, -35.0, 10.0)
 
     # The pond, with a footbridge over it high enough to crouch under in the shallows.
     m.span(10.0, 30.0, -1.2, -1.0, 18.0, 32.0, "sand", (0.5, 0.45, 0.35))
@@ -1888,11 +1904,14 @@ def school():
         m.light(sx + 2.0, H + 2.6, -7.0, rng=8.0, energy=0.8)
 
     # Ground floor: the cafeteria and its kitchen, the staff room.
+    # A metre back from the corridor: the cafeteria doors open into the room, and the nearest
+    # bench stood just past a leaf's free edge, so nobody could get round an open leaf
+    # (game-hide-n-seek's headless_bots, a stand-in there fifteen seconds).
     for row in range(3):
         for col in range(2):
-            t = m.prop("furniture_table", -26.0 + col * 7.0, -9.0 + row * 2.6, 0.0)
-            m.prop("furniture_bench", -26.5 + col * 7.0, -9.75 + row * 2.6, 0.0)
-            m.prop("furniture_bench", -25.5 + col * 7.0, -8.25 + row * 2.6, 180.0)
+            t = m.prop("furniture_table", -26.0 + col * 7.0, -10.0 + row * 2.6, 0.0)
+            m.prop("furniture_bench", -26.5 + col * 7.0, -10.75 + row * 2.6, 0.0)
+            m.prop("furniture_bench", -25.5 + col * 7.0, -9.25 + row * 2.6, 180.0)
     for i in range(5):
         m.prop("furniture_kitchen_bar", -17.2 + i * 1.0, -3.0, 180.0)
     m.prop("furniture_trashcan", -29.2, -2.2)
@@ -1958,7 +1977,10 @@ def school():
     gym_door = {"name": "gym doors", "into": "+", "away": False, "angle": 88.0, "leaves": 2, "tint": blue}
     m.wall((X1, Z0), (X1, Z1), "z", "paint", cream, height=H, y0=0.0, holes=[(10.6, 13.4, 0.0, DOOR_H, gym_door)])
     m.wall((X1, Z0), (X1, Z1), "z", "paint", cream, height=H, y0=H,
-           holes=[(10.6, 12.0, 0.0, DOOR_H, {"name": "balcony door", "into": "+", "tint": blue})])
+           # Hung from its north end: from the south one, opened from the balcony, it lay across
+           # the top of the stair beside it with 0.7 m left by the rail (game-hide-n-seek's
+           # headless_bots, a stand-in held there eleven seconds).
+           holes=[(10.6, 12.0, 0.0, DOOR_H, {"name": "balcony door", "into": "+", "hinge": "end", "tint": blue})])
     m.wall((X1, Z0), (GX, Z0), "x", "brick", None, height=TOP, thick=OUTER, holes=[(4.0, 7.0, 4.6, 6.6), (10.0, 13.0, 4.6, 6.6)])
     m.wall((X1, Z1), (GX, Z1), "x", "brick", None, height=TOP, thick=OUTER,
            holes=[(8.0, 9.4, 0.0, DOOR_H, {"name": "fire door", "into": "+", "away": False, "mat": "metal", "tint": (0.5, 0.15, 0.12)}),
@@ -1976,7 +1998,7 @@ def school():
     railing(m, X1 + 3.0, Z0 + 0.15, X1 + 3.0, 4.0, H, mat="metal")
     flight(m, X1 + 3.0, X1 + 5.0, 4.0, Z1 - 0.3, 0.0, H, "s", "wood", (0.6, 0.45, 0.32), thick=0.2)
     m.prop("furniture_bench", X1 + 1.5, -8.0, 90.0, y=H)
-    m.prop("furniture_cardboard_box_closed", X1 + 0.6, 0.0, 0.0, y=H)
+    m.prop("furniture_cardboard_box_closed", X1 + 0.6, 2.0, 0.0, y=H)
     # Bleachers along the south wall, hollow underneath.
     flight(m, 19.0, GX - 0.15, 6.0, Z1 - 0.15, 0.0, 2.6, "s", "wood", (0.66, 0.5, 0.34), thick=0.12)
     # The storeroom in the north-east corner, behind a shutter: mats and boxes.
@@ -3118,7 +3140,10 @@ def camp():
     m.wall((bx0, bz0), (bx1, bz0), "x", "wood", logs, height=3.0, thick=0.25, holes=[(3.0, 5.0, 1.0, 2.0)])
     m.wall((bx0, bz1), (bx1, bz1), "x", "wood", logs, height=3.0, thick=0.25)
     m.wall((bx0, bz0), (bx0, bz1), "z", "wood", logs, height=3.0, thick=0.25,
-           holes=[(3.3, 4.7, 0.0, DOOR_H, {"name": "boathouse door", "into": "+", "away": False, "tint": (0.4, 0.28, 0.18)})])
+           # Out onto the shore: opened in, it stood across the 1.8 m between the wall and the
+           # boat with half a metre to spare, and stand-ins leaving stood behind it for twenty
+           # seconds (game-hide-n-seek's headless_bots).
+           holes=[(3.3, 4.7, 0.0, DOOR_H, {"name": "boathouse door", "into": "-", "away": False, "tint": (0.4, 0.28, 0.18)})])
     m.wall((bx1, bz0), (bx1, bz1), "z", "wood", logs, height=3.0, thick=0.25,
            holes=[(1.0, 7.0, 0.0, 2.6, {"name": "boathouse doors", "leaves": 2, "into": "+", "away": False, "angle": 88.0, "tint": (0.5, 0.36, 0.24), "seconds": 1.2})])
     lifeboat(m, 14.8, -18.0, 0.0, tint=(0.6, 0.6, 0.62))
