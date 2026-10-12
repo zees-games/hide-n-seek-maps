@@ -1712,16 +1712,17 @@ def park():
     m.prop("furniture_lounge_chair", -30.5, 16.0, 200.0)
     m.prop("furniture_bench", -31.0, 12.6, 0.0, y=0.3)
 
-    # The woods: a ring of trees, rocks, logs and bushes between the paths and the hedge.
+    # The woods: a ring of trees, rocks, logs and bushes between the paths and the hedge; three of
+    # the trees are made to be climbed (game-hide-n-seek's tools/climb_trees.py).
     kinds = ["nature_tree_pine_tall_a", "nature_tree_default", "nature_tree_oak", "nature_tree_cone", "nature_tree_fat", "nature_tree_detailed"]
     tree_ring(m, -42.0, -38.0, 42.0, 38.0, 7.0, kinds, seed=5)
     undergrowth = [(-38.0, -6.5, "nature_rock_large_a"), (-37.5, 7.5, "nature_log_large"), (-36.0, -12.0, "nature_plant_bush_detailed"),
                    (-34.0, 4.0, "nature_stump_old"), (36.0, -14.0, "nature_rock_tall_a"), (40.0, -4.0, "nature_log_large"),
                    (38.0, 28.0, "nature_plant_bush_detailed"), (34.0, 36.0, "nature_stone_large_a"), (-6.0, 37.0, "nature_log_large"),
                    (3.0, -33.0, "nature_rock_large_a"), (-10.0, -34.0, "nature_plant_bush_detailed"), (-24.0, 34.0, "nature_plant_bush_large"),
-                   (24.0, -36.0, "nature_stump_round"), (-16.0, 26.0, "nature_tree_oak"), (-6.0, 24.0, "nature_tree_default_fall"),
-                   (38.0, -30.0, "nature_tree_plateau"), (-22.0, -8.0, "nature_tree_oak"), (-20.0, 6.0, "nature_tree_small"),
-                   (-26.0, 26.0, "nature_rock_small_a"), (2.0, 26.0, "nature_plant_bush_large"), (28.0, 10.0, "nature_tree_oak_fall")]
+                   (24.0, -36.0, "nature_stump_round"), (-16.0, 26.0, "nature_climbtree_oak"), (-6.0, 24.0, "nature_tree_default_fall"),
+                   (38.0, -30.0, "nature_tree_plateau"), (-22.0, -8.0, "nature_climbtree_oak"), (-20.0, 6.0, "nature_tree_small"),
+                   (-26.0, 26.0, "nature_rock_small_a"), (2.0, 26.0, "nature_plant_bush_large"), (28.0, 10.0, "nature_climbtree_fork")]
     for (ux, uz, kind) in undergrowth:
         m.prop(kind, ux, uz, (ux * 17 + uz) % 120)
 
@@ -2971,9 +2972,11 @@ def camp():
     flight(m, 40.0, 42.0, LAKE[3] - 1.6, LAKE[3], -1.2, 0.0, "s", "dirt", (0.5, 0.44, 0.34), thick=0.25)
     boundary(m, -66, -66, 66, 66, height=2.6, mat="hedge", tint=(0.7, 0.85, 0.7))
     tree_ring(m, -62, -62, 62, 62, 7.0, ["nature_tree_pine_tall_a", "nature_tree_cone", "nature_tree_pine_round_a", "nature_tree_tall", "nature_tree_default"], 3)
-    for (tx, tz, kind) in ((-24, 4, "nature_tree_pine_tall_a"), (-14, -4, "nature_tree_cone"), (14, 14, "nature_tree_oak"), (30, 26, "nature_tree_default"),
+    # Three made to be climbed (game-hide-n-seek's tools/climb_trees.py): limbs to jump and
+    # crouch-jump onto, somewhere up for a hider in the woods that is not the treehouse.
+    for (tx, tz, kind) in ((-24, 4, "nature_tree_pine_tall_a"), (-14, -4, "nature_tree_cone"), (14, 14, "nature_climbtree_oak"), (30, 26, "nature_climbtree_fork"),
                            (-44, 6, "nature_tree_pine_round_a"), (-6, -40, "nature_tree_tall"), (42, -44, "nature_tree_cone"), (52, 20, "nature_tree_pine_tall_a"),
-                           (-50, -14, "nature_tree_default"), (2, 39, "nature_tree_pine_round_a"), (-30, 40, "nature_tree_cone"), (26, 44, "nature_tree_tall"),
+                           (-50, -14, "nature_climbtree_oak"), (2, 39, "nature_tree_pine_round_a"), (-30, 40, "nature_tree_cone"), (26, 44, "nature_tree_tall"),
                            (14, -48, "nature_tree_pine_tall_a"), (-20, -50, "nature_tree_default"), (44, 34, "nature_tree_oak_fall")):
         m.prop(kind, float(tx), float(tz), (tx * 7 + tz) % 90)
     for (bx, bz, kind) in ((-15, -13, "nature_plant_bush_large"), (14, 4, "nature_plant_bush_detailed"), (-36, 0, "nature_plant_bush_large"),

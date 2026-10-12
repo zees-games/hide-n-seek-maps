@@ -3816,7 +3816,7 @@
    "yaw": 12.0
   },
   {
-   "id": "nature_tree_oak",
+   "id": "nature_climbtree_oak",
    "at": [
     -16.0,
     0.0,
@@ -3843,7 +3843,7 @@
    "yaw": 16.0
   },
   {
-   "id": "nature_tree_oak",
+   "id": "nature_climbtree_oak",
    "at": [
     -22.0,
     0.0,
@@ -3879,7 +3879,7 @@
    "yaw": 60.0
   },
   {
-   "id": "nature_tree_oak_fall",
+   "id": "nature_climbtree_fork",
    "at": [
     28.0,
     0.0,
