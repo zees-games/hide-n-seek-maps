@@ -12,6 +12,7 @@ one call with a seed.
     tools/build_maps.py                 # rewrite every map
     tools/build_maps.py --check         # fail if a file on disk is not what this would write
     tools/build_maps.py --sync-sizes    # copy prop sizes from ../game-hide-n-seek (when it is there)
+    tools/build_maps.py --spots hs_park [y]   # the clearest open floor on a map, for placing toys
 
 Conventions, which every function below keeps:
 
@@ -132,6 +133,7 @@ class Map:
         self.props = []
         self.lights = []
         self.doors = []
+        self.toys = []
         self.spawns = {"hiders": [], "seekers": []}
 
     # --- Boxes -------------------------------------------------------------
@@ -404,12 +406,12 @@ class Map:
                 return "a %s box" % b["mat"]
         return None
 
-    def _floored(self, x, y, z):
+    def _floored(self, x, y, z, edge=0.1):
         for b in self.boxes:
             if b.get("solid", True) is False:
                 continue
             (bx, by, bz), (sx, sy, sz) = b["at"], b["size"]
-            if abs(by + sy / 2 - y) < 0.12 and abs(x - bx) < sx / 2 - 0.1 and abs(z - bz) < sz / 2 - 0.1:
+            if abs(by + sy / 2 - y) < 0.12 and abs(x - bx) < sx / 2 - edge and abs(z - bz) < sz / 2 - edge:
                 return True
         return False
 
@@ -460,14 +462,205 @@ class Map:
                 if abs(dx) + abs(dz) > 0.01:
                     s["yaw"] = r(math.degrees(math.atan2(-dx, -dz)))
 
+    # --- Toys ----------------------------------------------------------------------
+
+    def toy(self, tid, x, z, yaw=0.0, y=0.0, links=None, on=None, near=4.0, group=None):
+        """One of dot-props' toys (a beach ball, a swing, a switch...), placed by id. Settled
+        at build (`_settle_toys`) to the nearest clear, floored spot within `near` metres, so a
+        hint in the right part of the map is enough. Returns its index, which a switch's
+        `links` names."""
+        if tid not in TOYS:
+            raise SystemExit("%s: no toy called %s (dot-props' stock: %s)" % (self.doc["id"], tid, ", ".join(sorted(TOYS))))
+        t = {"toy": tid, "at": v3(x, y, z)}
+        if yaw:
+            t["yaw"] = r(yaw)
+        if links:
+            t["links"] = list(links)
+        if on is not None:
+            t["on"] = bool(on)
+        t["_near"] = near
+        if group is not None:
+            # Moved together, by one offset: a rack of pins stays a rack.
+            t["_group"] = group
+        self.toys.append(t)
+        return len(self.toys) - 1
+
+    @staticmethod
+    def _toy_rect(t, at=None):
+        """A toy's footprint as an axis-aligned (x0, z0, x1, z1), turned by its yaw, with the
+        room a person needs round it."""
+        w, d, h, loose = TOYS[t["toy"]]
+        w, d = TOY_CLEAR.get(t["toy"], (w, d))
+        x, _, z = at if at is not None else t["at"]
+        yaw = math.radians(t.get("yaw", 0.0))
+        ww = abs(w * math.cos(yaw)) + abs(d * math.sin(yaw))
+        dd = abs(w * math.sin(yaw)) + abs(d * math.cos(yaw))
+        pad = 0.15 if loose else 0.6
+        return (x - ww / 2 - pad, z - dd / 2 - pad, x + ww / 2 + pad, z + dd / 2 + pad)
+
+    def _toy_clear(self, t, x, y, z, placed):
+        """What a toy at (x, y, z) would stand in, or None: a prop, a solid box between its
+        floor and its top, a spawn, another toy, or no floor under every corner."""
+        w, d, h, loose = TOYS[t["toy"]]
+        x0, z0, x1, z1 = self._toy_rect(t, (x, y, z))
+        lo, hi = y + 0.06, y + h
+        for p in self.props:
+            sx, sy, sz = size_of(p["id"])
+            yaw = math.radians(p.get("yaw", 0.0))
+            pw = abs(sx * math.cos(yaw)) + abs(sz * math.sin(yaw))
+            pd = abs(sx * math.sin(yaw)) + abs(sz * math.cos(yaw))
+            py = p["at"][1]
+            if py + sy < lo or py > hi:
+                continue
+            if p["at"][0] + pw / 2 > x0 and p["at"][0] - pw / 2 < x1 and p["at"][2] + pd / 2 > z0 and p["at"][2] - pd / 2 < z1:
+                return p["id"]
+        for b in self.boxes:
+            if b.get("solid", True) is False:
+                continue
+            (bx, by, bz), (sx, sy, sz) = b["at"], b["size"]
+            if by + sy / 2 <= lo or by - sy / 2 >= hi:
+                continue
+            if b.get("yaw"):
+                yaw = math.radians(b["yaw"])
+                sx, sz = abs(sx * math.cos(yaw)) + abs(sz * math.sin(yaw)), abs(sx * math.sin(yaw)) + abs(sz * math.cos(yaw))
+            if bx + sx / 2 > x0 and bx - sx / 2 < x1 and bz + sz / 2 > z0 and bz - sz / 2 < z1:
+                return "a %s box" % b["mat"]
+        for d_ in self.doors:
+            (dx, dy, dz) = d_["at"]
+            if abs(dx - x) < (x1 - x0) / 2 + 1.6 and abs(dz - z) < (z1 - z0) / 2 + 1.6 and abs(dy - y) < 2.5:
+                return "a door's swing"
+        for side in self.spawns.values():
+            for s in side:
+                sx_, sy_, sz_ = s["at"]
+                if abs(sy_ - y) < 1.0 and x0 - 0.6 < sx_ < x1 + 0.6 and z0 - 0.6 < sz_ < z1 + 0.6:
+                    return "a spawn"
+        for o in placed:
+            ox0, oz0, ox1, oz1 = self._toy_rect(o)
+            if abs(o["at"][1] - y) < 1.5 and ox1 > x0 and ox0 < x1 and oz1 > z0 and oz0 < z1:
+                return "the %s" % o["toy"]
+        pad = 0.15 if loose else 0.6
+        for cx, cz in ((x, z), (x0 + pad, z0 + pad), (x1 - pad, z0 + pad), (x0 + pad, z1 - pad), (x1 - pad, z1 - pad)):
+            if not self._floored(cx, y, cz, edge=0.0):
+                return "no floor"
+        return None
+
+    def _settle_toys(self):
+        """Moves every toy whose spot is taken to the nearest clear one within its `near`, and
+        stops the build when there is none: a toy in a wall, on a spawn or over the pond is a
+        map bug, and printing it is how the plan below gets fixed."""
+        placed = []
+        done = set()
+        for i, t in enumerate(self.toys):
+            if i in done:
+                continue
+            if "_group" in t:
+                members = [k for k, o in enumerate(self.toys) if o.get("_group") == t["_group"]]
+                self._settle_group(members, placed)
+                done.update(members)
+                continue
+            near = t.pop("_near")
+            x, y, z = t["at"]
+            what = self._toy_clear(t, x, y, z, placed)
+            if what is not None:
+                found = None
+                for ring in range(1, int(near / 0.5) + 1):
+                    step = ring * 0.5
+                    for k in range(8 * ring):
+                        a = 2.0 * math.pi * k / (8 * ring)
+                        cx, cz = x + step * math.cos(a), z + step * math.sin(a)
+                        if self._toy_clear(t, cx, y, cz, placed) is None:
+                            found = (cx, cz)
+                            break
+                    if found:
+                        break
+                if found is None:
+                    raise SystemExit("%s: toy %d (%s) at %s is in %s and nothing within %.1f m is clear" % (self.doc["id"], i, t["toy"], t["at"], what, near))
+                t["at"] = v3(found[0], y, found[1])
+            # On the floor's top, not the hint's: the ground outside is a hair under 0.
+            t["at"][1] = r(self._floor_top(t["at"][0], y, t["at"][2]))
+            placed.append(t)
+
+    def _settle_group(self, members, placed):
+        group = [self.toys[k] for k in members]
+        near = max(g.pop("_near") for g in group)
+        for g in group:
+            g.pop("_group")
+        def clash(dx, dz):
+            for g in group:
+                x, y, z = g["at"]
+                what = self._toy_clear(g, x + dx, y, z + dz, placed)
+                if what is not None:
+                    return what
+            return None
+        what = clash(0.0, 0.0)
+        offset = (0.0, 0.0)
+        if what is not None:
+            offset = None
+            for ring in range(1, int(near / 0.5) + 1):
+                step = ring * 0.5
+                for k in range(8 * ring):
+                    a = 2.0 * math.pi * k / (8 * ring)
+                    if clash(step * math.cos(a), step * math.sin(a)) is None:
+                        offset = (step * math.cos(a), step * math.sin(a))
+                        break
+                if offset:
+                    break
+            if offset is None:
+                raise SystemExit("%s: a set of %d %s at %s is in %s and nothing within %.1f m is clear" % (self.doc["id"], len(group), group[0]["toy"], group[0]["at"], what, near))
+        for g in group:
+            x, y, z = g["at"]
+            g["at"] = v3(x + offset[0], y, z + offset[1])
+            g["at"][1] = r(self._floor_top(g["at"][0], y, g["at"][2]))
+            placed.append(g)
+
+    def _floor_top(self, x, y, z):
+        best = y
+        for b in self.boxes:
+            if b.get("solid", True) is False:
+                continue
+            (bx, by, bz), (sx, sy, sz) = b["at"], b["size"]
+            top = by + sy / 2
+            if abs(top - y) < 0.12 and abs(x - bx) < sx / 2 and abs(z - bz) < sz / 2:
+                best = top if best == y else max(best, top)
+        return best
+
+    def spots(self, y=0.0, step=1.0, top=40):
+        """The open floor at height y, clearest first: (clearance, x, z). For choosing where a
+        toy goes (`--spots`)."""
+        xs = [b["at"][0] for b in self.boxes] or [0.0]
+        zs = [b["at"][2] for b in self.boxes] or [0.0]
+        out = []
+        x = min(xs)
+        probe = {"toy": "_probe"}
+        while x <= max(xs):
+            z = min(zs)
+            while z <= max(zs):
+                if self._floored(x, y, z, edge=0.0):
+                    for size in (6.0, 4.5, 3.0, 2.0, 1.2):
+                        TOYS["_probe"] = (size, size, 2.0, True)
+                        if self._toy_clear(probe | {"at": [x, y, z]}, x, y, z, []) is None:
+                            out.append((size, r(x), r(z)))
+                            break
+                z += step
+            x += step
+        TOYS.pop("_probe", None)
+        out.sort(key=lambda s: -s[0])
+        return out[:top]
+
     def build(self):
+        plan = TOY_PLANS.get(self.doc["id"])
+        if plan is not None:
+            plan(self)
         self._settle_spawns()
         self._face_spawns()
+        self._settle_toys()
         self.doc["boxes"] = self.boxes
         self.doc["props"] = self.props
         self.doc["lights"] = self.lights
         self.doc["doors"] = self.doors
         self.doc["spawns"] = self.spawns
+        if self.toys:
+            self.doc["toys"] = self.toys
         return self.doc
 
 
@@ -3445,6 +3638,249 @@ def museum():
     return m.build()
 
 
+# --- Toys -------------------------------------------------------------------------------
+#
+# dot-props' stock toys, by id: (width along the toy's x, depth along its z, height, loose).
+# A loose toy (a ball, a barrel) is pushed by whoever walks into it and needs only its own
+# room; one that stands (a swing, a see-saw) wants room round it to walk past. The numbers are
+# dot-props' DotPropToyCatalogue sizes with the frames counted in (a punching bag's post, a
+# swing's sweep).
+TOYS = {
+    "beach_ball": (1.0, 1.0, 1.0, True),
+    "football": (0.24, 0.24, 0.24, True),
+    "bowling_ball": (0.22, 0.22, 0.22, True),
+    "bowling_pin": (0.12, 0.12, 0.38, True),
+    "barrel": (0.6, 0.6, 0.85, True),
+    "tyre": (0.28, 0.8, 0.8, True),
+    "punching_bag": (2.0, 1.2, 2.7, False),
+    "swing": (2.4, 2.8, 2.4, False),
+    "seesaw": (3.2, 0.6, 0.9, False),
+    "merry_go_round": (2.8, 2.8, 1.3, False),
+    "wobbly_platform": (1.6, 1.6, 0.6, False),
+    "trampoline": (2.4, 2.4, 0.5, False),
+    "bounce_pad": (1.2, 1.2, 0.2, False),
+    "light_switch": (0.3, 0.3, 1.1, False),
+    "lamp_post": (0.4, 0.4, 2.8, False),
+    "fountain": (1.8, 1.8, 1.1, False),
+    "horn": (0.5, 0.6, 1.5, False),
+    "bell": (1.4, 0.4, 2.3, False),
+}
+
+# The room a launcher's flight needs clear, instead of its footprint: a trampoline throws a
+# person 2.3 m up wherever they were heading, and a pad 5 m along its arrow (+z) and back down,
+# so neither may stand where the flight would land them on a roof or a wall top that was meant
+# to be reached another way (or not at all).
+TOY_CLEAR = {
+    "trampoline": (7.0, 7.0),
+    "bounce_pad": (2.4, 14.0),
+}
+
+def bowling(m, x, z, yaw=0.0, y=0.0, lane=4.0, near=10.0):
+    """Ten pins in a triangle and a ball `lane` metres in front of the head pin, along the
+    toy's -z turned by yaw (the way a bowler faces them), settled as one set."""
+    group = "bowling%d" % len(m.toys)
+    a = math.radians(yaw)
+    def at(dx, dz):
+        return x + dx * math.cos(a) + dz * math.sin(a), z - dx * math.sin(a) + dz * math.cos(a)
+    for row in range(4):
+        for k in range(row + 1):
+            px, pz = at((k - row / 2.0) * 0.32, -row * 0.28)
+            m.toy("bowling_pin", px, pz, y=y, near=near, group=group)
+    bx, bz = at(0.0, lane)
+    m.toy("bowling_ball", bx, bz, y=y, near=near, group=group)
+
+
+def lamps_on_a_switch(m, lamps, switch, y=0.0):
+    """Lamp posts and the switch that turns them all on and off together."""
+    ids = [m.toy("lamp_post", lx, lz, y=y, near=3.0) for (lx, lz) in lamps]
+    m.toy("light_switch", switch[0], switch[1], y=y, links=ids, near=3.0)
+
+
+def toys_park(m):
+    """A playground's: a swing, a see-saw, a roundabout and wobbly platforms by the towers, a
+    trampoline and a bounce pad on the field, balls about, a fountain by the picnic shelter,
+    and the west path's lamps on a switch."""
+    m.toy("swing", -17.0, 6.0, 90.0, near=8.0)
+    m.toy("seesaw", -8.0, 10.0, near=6.0)
+    m.toy("merry_go_round", 10.0, -9.5, near=8.0)
+    m.toy("wobbly_platform", 3.0, 11.0, near=6.0)
+    m.toy("wobbly_platform", 5.5, 11.5, near=6.0)
+    m.toy("trampoline", -30.0, -8.0, near=10.0)
+    m.toy("bounce_pad", 0.0, 22.0, near=10.0)
+    m.toy("beach_ball", 0.0, 13.0, near=6.0)
+    m.toy("beach_ball", 20.0, 12.0, near=6.0)
+    m.toy("football", -30.0, -27.0, near=6.0)
+    m.toy("tyre", -2.0, 1.5, 30.0, near=4.0)
+    m.toy("tyre", 3.0, -0.5, -20.0, near=4.0)
+    m.toy("fountain", 24.0, 5.0, near=6.0)
+    lamps_on_a_switch(m, [(-22.0, 2.6), (-34.0, 2.6)], (-28.0, 2.4))
+
+
+def toys_camp(m):
+    """A summer camp's: the dinner bell by the mess hall and the wake-up horn, a football by the
+    campfire, beach balls on the lake shore, an obstacle course of tyres and wobbly platforms, a
+    tyre swing, a punching bag and a trampoline, and barrels by the kitchen."""
+    m.toy("bell", -4.0, 15.5, near=6.0)
+    m.toy("horn", 9.0, 15.0, near=8.0)
+    m.toy("football", 0.0, 10.0, near=6.0)
+    m.toy("beach_ball", 16.0, -6.0, near=8.0)
+    m.toy("beach_ball", 14.0, -14.0, near=8.0)
+    for i in range(4):
+        m.toy("tyre", 20.0 + i * 1.2, 6.0 + (i % 2) * 0.6, 90.0, near=6.0)
+    m.toy("wobbly_platform", 22.0, 10.0, near=8.0)
+    m.toy("wobbly_platform", 24.5, 11.0, near=8.0)
+    m.toy("swing", 8.0, -26.0, near=10.0)
+    m.toy("punching_bag", -20.0, 10.0, near=8.0)
+    m.toy("trampoline", -24.0, -22.0, near=10.0)
+    m.toy("barrel", 8.0, 21.0, near=6.0)
+    m.toy("barrel", 8.0, 22.0, near=6.0)
+
+
+def toys_castle(m):
+    """A castle's: the bell before the keep, the herald's horn by the gate, a punching bag in
+    the training yard, barrels by the smithy and the stables, and skittles on the courtyard."""
+    m.toy("bell", 4.0, -5.0, near=6.0)
+    m.toy("horn", 4.0, 26.0, near=6.0)
+    m.toy("punching_bag", -2.0, 20.0, near=8.0)
+    m.toy("barrel", 12.5, -3.0, near=5.0)
+    m.toy("barrel", 13.4, -3.6, near=5.0)
+    m.toy("barrel", -4.5, 14.0, near=5.0)
+    bowling(m, 18.0, 16.0, 90.0)
+
+
+def toys_mall(m):
+    """A shopping centre's: beach balls and a football loose from the sports shop, wobbly
+    platforms in a play corner off the atrium, a roundabout and a trampoline at the car park's
+    play area, its lamps on a switch, and a bounce pad on the loading dock."""
+    m.toy("beach_ball", 8.0, -4.0, near=6.0)
+    m.toy("beach_ball", -8.0, 4.0, near=6.0)
+    m.toy("football", 10.0, 6.0, near=6.0)
+    m.toy("wobbly_platform", -10.0, -8.0, near=8.0)
+    m.toy("wobbly_platform", -12.5, -8.5, near=8.0)
+    m.toy("merry_go_round", -30.0, 30.0, near=12.0)
+    m.toy("trampoline", 30.0, 32.0, near=12.0)
+    m.toy("bounce_pad", 0.0, -30.0, 90.0, near=12.0)
+    lamps_on_a_switch(m, [(-10.0, 22.0), (10.0, 22.0)], (0.0, 22.0))
+
+
+def toys_manor(m):
+    """A country house's: a swing and croquet-lawn skittles in the garden, a see-saw by the
+    gazebo, a garden bell at the greenhouse, a football on the lawn, and the drive's lamps on a
+    switch by the door."""
+    m.toy("swing", 26.0, 14.0, near=10.0)
+    bowling(m, 14.0, 20.0, 180.0)
+    m.toy("seesaw", 26.0, -1.0, near=8.0)
+    m.toy("bell", 18.0, -10.0, near=8.0)
+    m.toy("football", -12.0, 14.0, near=8.0)
+    m.toy("beach_ball", 8.0, 22.0, near=8.0)
+    lamps_on_a_switch(m, [(-5.0, 16.0), (5.0, 16.0)], (0.0, 10.0))
+
+
+def toys_museum(m):
+    """A museum's interactive corners: the bell and the horn of the sound exhibit, a wobbly
+    platform for the balance exhibit, the plaza's lamps on a switch and its children's
+    trampoline, and a beach ball from the gift shop."""
+    m.toy("bell", -6.0, 26.0, near=8.0)
+    m.toy("horn", 6.0, 26.0, near=8.0)
+    m.toy("wobbly_platform", 0.0, 34.0, near=8.0)
+    m.toy("trampoline", -26.0, 32.0, near=12.0)
+    m.toy("beach_ball", -18.0, 16.0, near=8.0)
+    m.toy("football", 14.0, 34.0, near=8.0)
+    lamps_on_a_switch(m, [(-12.0, 22.0), (12.0, 22.0)], (9.0, 22.0))
+
+
+def toys_school(m):
+    """A school's: the bell in the playground, footballs on the field, a beach ball, a swing,
+    a see-saw and a roundabout on the playground, tyres for the obstacle course and a trampoline
+    by the field, and a punching bag in the gym."""
+    m.toy("bell", 4.0, -20.0, near=8.0)
+    m.toy("football", 0.0, 30.0, near=8.0)
+    m.toy("football", 6.0, 34.0, near=8.0)
+    m.toy("beach_ball", -20.0, -22.0, near=8.0)
+    m.toy("swing", -30.0, -30.0, near=10.0)
+    m.toy("seesaw", 6.0, -24.0, near=8.0)
+    m.toy("merry_go_round", -26.0, -20.0, near=10.0)
+    for i in range(3):
+        m.toy("tyre", 30.0 + i * 1.3, 20.0, 90.0, near=8.0)
+    m.toy("punching_bag", 20.0, 0.0, near=6.0)
+    m.toy("trampoline", -32.0, 30.0, near=10.0)
+
+
+def toys_ship(m):
+    """A liner's: the ship's bell and horn on the forward deck, barrels and tyre fenders aft and
+    on the quay, beach balls by the pool on the sun deck, and the quay's lamps on a switch."""
+    M, S, Q = 3.2, 6.4, 2.0
+    m.toy("bell", 40.0, -4.0, y=M, near=6.0)
+    m.toy("horn", 40.0, 4.5, y=M, near=6.0)
+    m.toy("barrel", -38.0, -3.0, y=M, near=4.0)
+    m.toy("barrel", -38.0, 3.0, y=M, near=4.0)
+    m.toy("beach_ball", -5.0, 4.0, y=S, near=6.0)
+    m.toy("beach_ball", 5.0, -6.0, y=S, near=6.0)
+    for (x, z) in ((-20.0, 22.0), (-18.8, 22.4), (20.0, 22.0)):
+        m.toy("barrel", x, z, y=Q, near=6.0)
+    m.toy("tyre", -30.0, 16.0, y=Q, near=6.0)
+    m.toy("tyre", 30.0, 16.0, y=Q, near=6.0)
+    lamps_on_a_switch(m, [(-14.0, 28.0), (14.0, 28.0)], (0.0, 30.0), y=Q)
+
+
+def toys_village(m):
+    """A village's: the fountain in the square (its stone one is a basin; this one runs), the
+    hall's bell, a swing and a see-saw on the green, barrels and tyres by the barn, a football
+    and the square's lamps on a switch."""
+    m.toy("fountain", 6.0, 6.0, near=6.0)
+    m.toy("bell", 10.0, 23.0, near=8.0)
+    m.toy("swing", -14.0, 34.0, near=10.0)
+    m.toy("seesaw", 16.0, 30.0, near=10.0)
+    m.toy("barrel", 18.0, 9.0, near=6.0)
+    m.toy("barrel", 18.8, 9.6, near=6.0)
+    m.toy("tyre", 17.0, -9.0, 90.0, near=6.0)
+    m.toy("football", -6.0, 8.0, near=6.0)
+    m.toy("beach_ball", 2.0, -14.0, near=8.0)
+    lamps_on_a_switch(m, [(-9.0, -9.0), (9.0, -9.0)], (0.0, -10.0))
+
+
+def toys_warehouse(m):
+    """A warehouse's: barrels and tyres in the yard and the hall, the forklift's horn, a punching
+    bag and a football where the shift takes its break, and the yard's lamps on a switch."""
+    for (x, z) in ((-22.0, 14.0), (-21.2, 14.6), (-20.4, 14.0), (8.0, 14.0), (-10.0, 6.0)):
+        m.toy("barrel", x, z, near=6.0)
+    for (x, z) in ((12.0, 20.0), (13.3, 20.0), (-28.0, -20.0)):
+        m.toy("tyre", x, z, 90.0, near=6.0)
+    m.toy("horn", 4.0, 8.0, near=6.0)
+    m.toy("punching_bag", 22.0, 6.0, near=8.0)
+    m.toy("football", 0.0, 20.0, near=8.0)
+    m.toy("bounce_pad", -30.0, 20.0, 90.0, near=10.0)
+    lamps_on_a_switch(m, [(-6.0, 24.0), (6.0, 24.0)], (0.0, 24.0))
+
+
+def toys_apartments(m):
+    """A block of flats': the back yard's swing, see-saw and trampoline, a football and a beach
+    ball, tyres in the alley, and the yard's lamps on a switch by the back door."""
+    m.toy("swing", -8.0, -22.0, near=8.0)
+    m.toy("seesaw", 2.0, -22.0, near=8.0)
+    m.toy("trampoline", -12.0, -18.0, near=8.0)
+    m.toy("football", 0.0, -17.0, near=6.0)
+    m.toy("beach_ball", 5.0, -19.0, near=6.0)
+    m.toy("tyre", -24.0, -8.0, 90.0, near=6.0)
+    m.toy("tyre", -24.0, -4.0, 90.0, near=6.0)
+    lamps_on_a_switch(m, [(-14.0, -24.0), (6.0, -24.0)], (-4.0, -15.0))
+
+
+TOY_PLANS = {
+    "hs_park": toys_park,
+    "hs_camp": toys_camp,
+    "hs_castle": toys_castle,
+    "hs_mall": toys_mall,
+    "hs_manor": toys_manor,
+    "hs_museum": toys_museum,
+    "hs_school": toys_school,
+    "hs_ship": toys_ship,
+    "hs_village": toys_village,
+    "hs_warehouse": toys_warehouse,
+    "hs_apartments": toys_apartments,
+}
+
+
 MAPS = {
     "hs_apartments": apartments,
     "hs_warehouse": warehouse,
@@ -3500,6 +3936,51 @@ def sync_sizes():
 
 
 if __name__ == "__main__":
+    if "--spots" in sys.argv:
+        at = sys.argv.index("--spots")
+        mid = sys.argv[at + 1]
+        y = float(sys.argv[at + 2]) if len(sys.argv) > at + 2 else 0.0
+        # The map without its toys, so the spots are the ones a toy could take.
+        TOY_PLANS.pop(mid, None)
+        holder = {}
+        real_build = Map.build
+        def capture(self):
+            holder["m"] = self
+            return real_build(self)
+        Map.build = capture
+        MAPS[mid]()
+        m = holder["m"]
+        # A plan of the floor at y, a character a metre: '@' 4 m clear round it, 'o' 2.5 m,
+        # '.' 1.2 m, ',' floor with less, ' ' no floor; 'S' a spawn, 'D' a door. North (-z) up.
+        xs = [b["at"][0] for b in m.boxes]
+        zs = [b["at"][2] for b in m.boxes]
+        x0, x1, z0, z1 = int(min(xs)), int(max(xs)) + 1, int(min(zs)), int(max(zs)) + 1
+        print("x from %d to %d, z from %d (top) to %d; a tick every 10 m" % (x0, x1, z0, z1))
+        print("     " + "".join("|" if x % 10 == 0 else " " for x in range(x0, x1)))
+        spawn_at = {(round(s_["at"][0]), round(s_["at"][2])) for side in m.spawns.values() for s_ in side if abs(s_["at"][1] - y) < 1.0}
+        door_at = {(round(d["at"][0]), round(d["at"][2])) for d in m.doors if abs(d["at"][1] - y - 1.15) < 1.5}
+        for z in range(z0, z1):
+            row = []
+            for x in range(x0, x1):
+                if (x, z) in spawn_at:
+                    row.append("S")
+                    continue
+                if (x, z) in door_at:
+                    row.append("D")
+                    continue
+                if not m._floored(x + 0.0, y, z + 0.0, edge=0.0):
+                    row.append(" ")
+                    continue
+                ch = ","
+                for size, c in ((4.0, "@"), (2.5, "o"), (1.2, ".")):
+                    TOYS["_probe"] = (size, size, 2.0, True)
+                    if m._toy_clear({"toy": "_probe", "at": [x, y, z]}, x, y, z, []) is None:
+                        ch = c
+                        break
+                row.append(ch)
+            TOYS.pop("_probe", None)
+            print("%4d " % z + "".join(row) + ("  -" if z % 10 == 0 else ""))
+        sys.exit(0)
     if "--sync-sizes" in sys.argv:
         sync_sizes()
         sys.exit(0)

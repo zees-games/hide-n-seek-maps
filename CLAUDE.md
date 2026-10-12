@@ -37,6 +37,10 @@ The brief asked for maps as interactive as the genre's best, and what those have
 
 **An open panel must leave a body's width (0.8 m) round its free edge, and a door pinned to open one way wants 2 m of floor clear of its swing on that side** to be opened from: game-hide-n-seek's stand-ins walk round a panel's free edge and step out of a swing before using a door, and `headless_bots` found the places where neither could happen (a back door spanning the strip to a yard wall, a court gate beside a bench, a balcony door across a stair top, a boathouse door between wall and boat, a shed door over its boxes, a cottage's front door on its partition and its bed in the bedroom door's swing).
 
+## Toys
+
+Every map has a dozen or more of dot-props' toys (balls, swings, see-saws, roundabouts, trampolines, bounce pads, lamps on a switch, a fountain, a bell, a horn, barrels, tyres, skittles), chosen for the place: the school's bell is in its playground, the ship's bell and horn are on its forward deck, the castle has skittles in the courtyard and a herald's horn by the gate. Each map's are one `toys_<map>` function near the end of the builder, run by `Map.build` (`TOY_PLANS`). **A toy is a hint, settled**: `_settle_toys` moves one whose spot is taken (a prop, a wall, a door's swing, a spawn, another toy, no floor under a corner) to the nearest clear spot within its `near`, and stops the build when there is none. A bowling set settles as one. A trampoline and a bounce pad are checked against the room their flight needs (`TOY_CLEAR`), so neither can throw a hider onto a roof meant to be reached another way. `--spots <map> [y]` prints the open floor. game-hide-n-seek's `headless_maps` checks every toy stands clear and is still where it was put two seconds on.
+
 ## Things the builder decides for you
 
 - **Spawns are settled and faced** (mg-prop-hunt-maps' finding, kept): a spawn a prop later landed on is moved to the nearest clear floored spot and printed; every spawn faces the middle of the furniture.
