@@ -6,7 +6,7 @@ The maps game-hide-n-seek plays, as JSON documents. Read `../../CLAUDE.md` and `
 
 **`tools/build_maps.py` writes every document, and the JSON is committed.** Edit the builder, run it, commit both. `--check` (CI) fails when a committed file differs from what the builder writes. The library half (walls, rooms, `against`, spawn settling and facing) came from mg-prop-hunt-maps' builder on 2026-10-10; what is this repository's own is the hide-and-seek half below it.
 
-**Prop sizes are a snapshot** (`tools/prop_sizes.json`), copied from game-hide-n-seek's `props/catalogue.json` by `--sync-sizes`, so the builder (and CI) runs without the game checked out.
+**Prop sizes are a snapshot** (`tools/prop_sizes.json`), copied from game-hide-n-seek's `props/catalogue.json` by `--sync-sizes`, so the builder (and CI) runs without the game checked out. **`on()` rests a prop on what is under its footprint**, from the support's `tops` grid (copied from the game's `props/pieces.json`, its part-shaped collision): a bed's mattress, not its headboard's height. Re-run `--sync-sizes` after the game re-measures its props.
 
 ## What a hide-and-seek map needs, and the helpers that make it
 
