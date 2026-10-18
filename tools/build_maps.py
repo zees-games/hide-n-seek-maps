@@ -1662,8 +1662,10 @@ def village():
         # stood in the 1 m left between them (game-hide-n-seek's headless_bots). Hung from the
         # partition's end, so opened out it clears the next garden's fence post.
         front = [(0.6, 2.0, SILL, HEAD), (2.6, 4.0, 0.0, DOOR_H, {"name": "front door", "into": inward, "hinge": "end", "tint": painted}), (6.4, 8.0, SILL, HEAD)]
-        # The back door opens out, into the garden: inward, the stove is behind it.
-        back = [(1.0, 2.4, 0.0, DOOR_H, {"name": "back door", "into": inward, "away": False}), (6.4, 8.0, SILL, HEAD)]
+        # The back door opens out, into the garden: inward, the stove is behind it. 2 m from the
+        # corner, not 1: its open panel ended 0.71 m from the garden fence, one body's width, and
+        # a stand-in coming out wedged there for eighteen seconds (game-hide-n-seek's headless_bots).
+        back = [(2.0, 3.4, 0.0, DOOR_H, {"name": "back door", "into": inward, "away": False}), (6.4, 8.0, SILL, HEAD)]
         m.wall((x0, z0), (x1, z0), "x", "plaster", tint, height=2.8, thick=OUTER, holes=front if face == "n" else back)
         m.wall((x0, z1), (x1, z1), "x", "plaster", tint, height=2.8, thick=OUTER, holes=front if face == "s" else back)
         m.wall((x0, z0), (x0, z1), "z", "plaster", tint, height=2.8, thick=OUTER, holes=[(2.6, 4.2, SILL, HEAD)])
@@ -3367,8 +3369,10 @@ def camp():
            # boat with half a metre to spare, and stand-ins leaving stood behind it for twenty
            # seconds (game-hide-n-seek's headless_bots).
            holes=[(3.3, 4.7, 0.0, DOOR_H, {"name": "boathouse door", "into": "-", "away": False, "tint": (0.4, 0.28, 0.18)})])
+    # Four metres, not six: a 3 m leaf opened along the north edge of the opening, and a hider
+    # fleeing through it could not shut it behind them (game-hide-n-seek's headless_bots).
     m.wall((bx1, bz0), (bx1, bz1), "z", "wood", logs, height=3.0, thick=0.25,
-           holes=[(1.0, 7.0, 0.0, 2.6, {"name": "boathouse doors", "leaves": 2, "into": "+", "away": False, "angle": 88.0, "tint": (0.5, 0.36, 0.24), "seconds": 1.2})])
+           holes=[(2.0, 6.0, 0.0, 2.6, {"name": "boathouse doors", "leaves": 2, "into": "+", "away": False, "angle": 88.0, "tint": (0.5, 0.36, 0.24), "seconds": 1.2})])
     lifeboat(m, 14.8, -18.0, 0.0, tint=(0.6, 0.6, 0.62))
     m.against("furniture_bookcase_open", "w", bx0 + 0.15, -20.6)
     m.prop("furniture_cardboard_box_closed", 11.0, -15.0, 15.0)
