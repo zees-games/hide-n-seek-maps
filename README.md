@@ -49,7 +49,7 @@ The builder moves any spawn that a prop or a wall was put on top of to the neare
 
 The author's licence note: "do whatever idc just dont say this terrible map is urs". We credit the author in the map's `author` and `source` fields and will remove the map on request.
 
-Not converted: `ph_apartment` (Tib, https://gamebanana.com/mods/61479) because its page forbids distributing a modified copy. `ph_hotel` (1Vodker1, https://gamebanana.com/mods/61495, CC BY-NC-ND 4.0) was converted but is too small for the bot suite's hider-survival bands (hiders were all caught in under 35 s), so it is not shipped.
+Not converted: `ph_apartment` (Tib, https://gamebanana.com/mods/61479) because its page forbids distributing a modified copy. `ph_hotel` (1Vodker1, https://gamebanana.com/mods/61495, CC BY-NC-ND 4.0) is converted by `tools/import_bsp.py` but not shipped: hs_hotel is about 40 by 38 m of small rooms, so a seeker tours it in under a minute. Bot rounds (24, medium): as converted, hiders lasted 18.9 s and won 0 of 24; with the seekers moved to the far top room (`--seekers-at=-1,-32`) 53.6 s; with 59 pieces of cover (`--cover=80 --cover-gap=1.4`) 112 s and 11 of 24 won, but then hiders spawned beside cover and 59 of 144 walked the 8 m `headless_bots` wants; keeping the spawns to the lobby (`--lobby=12,2.5`) gave 103 s and 7 of 24 with 100 of 144 walking, and other cover seeds (`--cover-seed=`) gave 51 to 189 s, with the seekers' door stuck beside its panel for 10 to 26 s. No setting passed every band at once, so the map is not in `maps/`.
 
 ## License
 MIT. See [LICENSE](LICENSE).

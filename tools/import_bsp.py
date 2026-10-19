@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Converts a Source 1 community prop-hunt or hide-and-seek .bsp (VBSP 19/20) into a hide-n-seek map document.
 
-    tools/import_bsp.py <map.bsp> <id> "<Name>" <author> <page-url> [--out=maps/<id>.json] [--style=yard] [--field=round_seconds=300] [--drop-beside=x,z,kind] [--clear=x0,z0,x1,z1] [--prune-pockets] [--widen-doors] [--terrain] [--slide-doors] [--cover=N] [--drop-kind=id] [--thin=id:N]
+    tools/import_bsp.py <map.bsp> <id> "<Name>" <author> <page-url> [--out=maps/<id>.json] [--style=yard] [--field=round_seconds=300] [--drop-beside=x,z,kind] [--clear=x0,z0,x1,z1] [--prune-pockets] [--widen-doors] [--terrain] [--slide-doors] [--cover=N] [--cover-gap=m] [--lobby=r,gap] [--cover-seed=N] [--seekers-at=x,z] [--drop-kind=id] [--thin=id:N]
 
 --field=<name>=<number> sets a document number the map's own band wants (round_seconds, hide_seconds), found by headless_bots, so a rerun of the importer keeps it.
 
@@ -26,6 +26,18 @@ there is to look behind grows with it, so a lone seeker could not search a yard 
 
 --cover=N adds N pieces of furniture (beds, wardrobes, sofas) on the clearest open floor, seeded, for a
 map whose author left it bare; the bot suite finds a hider's places by cover.
+
+--lobby=r,gap keeps only the hider starts within r metres of the author's seeker start (the lobby everybody arrives in) and keeps
+--cover's furniture `gap` metres clear of them: with the author's starts in every room and furniture beside each, a hider hid
+where it spawned (59 of 144 walked 8 m), and the game is the walk to somewhere the seekers have to look.
+
+--cover-seed=N reseeds --cover's placement (7 by default); the bot bands of a small map move a good deal with which furniture lands where.
+
+--cover-gap=m sets how far apart --cover's furniture stands (2.5 m by default; a hotel of small rooms had room for 27 at that gap).
+
+--seekers-at=x,z (in the finished map's coordinates) stands the seekers in a 2 x 2 block there, whatever the author's starts
+were: a small hotel's seekers began a few metres from the hiders' lobby, so the first was caught in two seconds and
+the map's whole round lasted under thirty. The far end of the building makes the seekers walk the length of it.
 
 --terrain turns the map's displacement ground (sculpted terrain, which is not a brush) into a stepped field of
 ground boxes; without it a map whose yard is terrain has no floor.
@@ -801,7 +813,7 @@ COVER_INDOOR = ("furniture_bed_single", "furniture_bookcase_closed_wide", "furni
                 "furniture_kitchen_cabinet", "furniture_bed_double", "furniture_cabinet_television", "furniture_side_table_drawers")
 
 
-def scatter_cover(m, count, seed, spacing=2.5, kinds=COVER_INDOOR):
+def scatter_cover(m, count, seed, spacing=2.5, kinds=COVER_INDOOR, avoid=(), avoid_r=0.0):
     """Cover on the clearest open floor, the same every run: a seeded shuffle of the open floor's
     spots (2 m of clear floor round each, the 1.5 m grid), each at least `spacing` metres from the
     last, turned to face a wall's way at random. Placed before the build, so spawns settle round it."""
@@ -813,7 +825,7 @@ def scatter_cover(m, count, seed, spacing=2.5, kinds=COVER_INDOOR):
     for _size, x, z in spots:
         if len(placed) >= count:
             break
-        if all((x - a) ** 2 + (z - b) ** 2 >= spacing ** 2 for a, b in placed):
+        if all((x - a) ** 2 + (z - b) ** 2 >= avoid_r ** 2 for a, b in avoid) and all((x - a) ** 2 + (z - b) ** 2 >= spacing ** 2 for a, b in placed):
             m.prop(rng.choice(kinds), x, z, yaw=rng.choice((0.0, 90.0, 180.0, 270.0)))
             placed.append((x, z))
     return len(placed)
@@ -910,6 +922,10 @@ def main(argv):
     widen = False
     slide = False
     cover = 0
+    seekers_at = None
+    cover_gap = 2.5
+    lobby = None
+    cover_seed = 7
     drop_kinds = []
     thin = {}
     terrain = False
@@ -923,6 +939,14 @@ def main(argv):
         elif a.startswith("--thin="):
             k, _, n = a[7:].partition(":")
             thin[k] = int(n)
+        elif a.startswith("--seekers-at="):
+            seekers_at = tuple(float(t) for t in a[13:].split(","))
+        elif a.startswith("--cover-seed="):
+            cover_seed = int(a[13:])
+        elif a.startswith("--lobby="):
+            lobby = tuple(float(t) for t in a[8:].split(","))
+        elif a.startswith("--cover-gap="):
+            cover_gap = float(a[12:])
         elif a.startswith("--cover="):
             cover = int(a[8:])
         elif a == "--slide-doors":
@@ -1073,15 +1097,25 @@ def main(argv):
             dropped["(over a hole)"] = dropped.get("(over a hole)", 0) + 1
             continue
         m.prop(pid, gx, gz, yaw=yaw, y=y)
-    if cover:
-        print("cover furniture: %d placed" % scatter_cover(m, cover, seed=7))
     starts = [e for e in bsp.entities if e.get("classname") in START_CLASSES]
+    keep_hiders = None
+    if lobby:
+        g0 = [gd(vec(e["origin"])) for e in starts]
+        near0 = sorted(range(len(starts)), key=lambda i: (g0[i][0] - g0[0][0]) ** 2 + (g0[i][2] - g0[0][2]) ** 2)
+        seek0 = set(near0[:max(2, min(4, len(starts) // 3))])
+        keep_hiders = {i for i in range(len(starts)) if i not in seek0
+                       and (g0[i][0] - g0[0][0]) ** 2 + (g0[i][2] - g0[0][2]) ** 2 <= lobby[0] ** 2}
+    if cover:
+        avoid = [(g0[i][0], g0[i][2]) for i in keep_hiders] if keep_hiders else []
+        print("cover furniture: %d placed" % scatter_cover(m, cover, seed=cover_seed, spacing=cover_gap, avoid=avoid, avoid_r=lobby[1] if lobby else 0.0))
     # Seekers count together at one end: the starts nearest the first one. Everybody else hides,
     # from wherever the author put them, spread out as the author spread them.
     gstarts = [gd(vec(e["origin"])) for e in starts]
     order = sorted(range(len(starts)), key=lambda i: (gstarts[i][0] - gstarts[0][0]) ** 2 + (gstarts[i][2] - gstarts[0][2]) ** 2)
     seek = set(order[:max(2, min(4, len(starts) // 3))])
     for i, e in enumerate(starts):
+        if keep_hiders is not None and i not in seek and i not in keep_hiders:
+            continue
         gx, gy, gz = gstarts[i]
         ang = vec(e.get("angles", "0 0 0"))
         # Stands on whatever floor is under the start (a sunken room is below zero), not on zero.
@@ -1171,6 +1205,12 @@ def main(argv):
     if len(kept) != len(doc["props"]):
         print("dropped %d props by kind" % (len(doc["props"]) - len(kept)))
         doc["props"][:] = kept
+    if seekers_at:
+        old = doc["spawns"]["seekers"]
+        for i, sp in enumerate(old):
+            sp["at"] = [round(seekers_at[0] + (i % 2) * 1.2, 3), sp["at"][1], round(seekers_at[1] + (i // 2) * 1.2, 3)]
+            sp["yaw"] = 0.0
+        print("seekers moved to (%.1f, %.1f)" % seekers_at)
     add_doors(m, doc, bsp, (ox, oy, oz), slide)
     out_path = out_path or os.path.join(build_maps.ROOT, "maps", mid + ".json")
     with open(out_path, "w") as f:
