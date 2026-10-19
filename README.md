@@ -23,6 +23,7 @@ Every map has a way round (a chase that reaches a dead end is over), somewhere u
 | `hs_camp` (Pinehollow Camp) | A summer camp in the woods by a lake: four cabins on blocks (a crawl space under each) with bunk beds, a mess hall with its kitchen, outhouses, tents round a campfire, a fire lookout with a switchback in an open frame up to a cabin twelve metres up, a treehouse with a hut and a rope bridge to a second platform, a dock with two rowing boats and a boathouse with doors on the water, an archery range, and a cave of passages in the hillside with a crawl-in back way and a chamber behind a rock that slides |
 | `hs_museum` (Halden Museum) | Two tall storeys round a rotunda with a skylight and a whale's skeleton hung in it, grand stairs either side of the entrance hall up to a gallery that rings it; below, a dinosaur on a plinth whose ribs stand high enough to crouch under, a stepped pyramid with a crawl tunnel through its base and a tomb with a stone door, an art gallery that is a maze of partitions, a cafe and a gift shop, a security office and a loading store with a shutter; above, an armour hall of glass cases, a space gallery with a rocket and a capsule with a hatch, a hall of clothes on stands with changing rooms, a conservation lab, and a library whose vault is behind a panel of its wall |
 | `hs_park` (Pinecrest Park) | A playground of towers, a rope bridge and play tubes you crawl through, a picnic shelter, the toilets with a door on every stall and loose tiles between the two sides, a fenced tennis court with a gate, a pond with a footbridge, a ranger's cabin and the woods all round |
+| `hs_frontyard` (Front Yard) | A suburban house and its front yard, imported from a Source map (see Credits): a lawn with a hedge, fences and a shed to hide behind, and a house whose doors open and shut. |
 
 ## How they are made
 
@@ -37,6 +38,18 @@ python3 tools/build_maps.py --sync-sizes   # copy prop sizes from ../game-hide-n
 The JSON is still what the game reads and is committed; CI runs `--check`, so a hand edit to a built document is caught instead of being lost on the next build. Hand-written documents the builder does not produce are fine too: anything in `maps/` with a `.json` extension is loaded.
 
 The builder moves any spawn that a prop or a wall was put on top of to the nearest clear spot and says so. Every map is then checked by game-hide-n-seek's `examples/headless_maps.tscn` (it fits on the wire, every prop is one the game knows, every spawn has a floor and room for a person, no prop is sunk into a wall, every prop stands on something, there is enough to hide behind, every door swings into free space and every doorway is clear), and its stairs and crawl spaces are walked by `examples/headless_climb.tscn`.
+
+## Imported maps and credits
+
+`tools/import_bsp.py` converts a Source 1 `.bsp` into a document here (brushes become boxes, props become catalogue props, `prop_door_rotating` becomes a real door, player starts become seeker and hider spawns; art is replaced with the game's CC0 Kenney props). Imported documents are not written by `build_maps.py`; rerun the importer with the original `.bsp`. Flags: `--style`, `--slide-doors`, `--cover=N`, `--drop-kind=<id>`, `--thin=<id>:N`.
+
+| Map | Original | Author | Source |
+| --- | --- | --- | --- |
+| `hs_frontyard` | ph_frontyard | axoh | https://gamebanana.com/mods/398632 |
+
+The author's licence note: "do whatever idc just dont say this terrible map is urs". We credit the author in the map's `author` and `source` fields and will remove the map on request.
+
+Not converted: `ph_apartment` (Tib, https://gamebanana.com/mods/61479) because its page forbids distributing a modified copy. `ph_hotel` (1Vodker1, https://gamebanana.com/mods/61495, CC BY-NC-ND 4.0) was converted but is too small for the bot suite's hider-survival bands (hiders were all caught in under 35 s), so it is not shipped.
 
 ## License
 MIT. See [LICENSE](LICENSE).
