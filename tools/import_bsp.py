@@ -33,6 +33,14 @@ where it spawned (59 of 144 walked 8 m), and the game is the walk to somewhere t
 
 --cover-seed=N reseeds --cover's placement (7 by default); the bot bands of a small map move a good deal with which furniture lands where.
 
+--hiders-at=x,z,r (finished map's coordinates) keeps only the hider starts within r metres of that point, and takes the extra starts from the open floor there: a flat only 15 m deep needs its hiders in one corner for the walk to cover to be 8 m.
+
+--cover-away=h,s keeps --cover's furniture h metres from every hider start and s metres from every seeker start (the seekers' first three seconds, and a hider that hides where it spawned).
+
+--hiders-far=m drops every hider start within m metres of a seeker start: a flat whose corridor starts are a few metres from the seekers had hiders caught in the first three seconds.
+
+--cover-clear=m sets how much clear floor (2 m by default) a piece of cover wants round it: a small flat has no 2 m of open floor, so 0 pieces were placed.
+
 --cover-gap=m sets how far apart --cover's furniture stands (2.5 m by default; a hotel of small rooms had room for 27 at that gap).
 
 --seekers-at=x,z (in the finished map's coordinates) stands the seekers in a 2 x 2 block there, whatever the author's starts
@@ -813,20 +821,20 @@ COVER_INDOOR = ("furniture_bed_single", "furniture_bookcase_closed_wide", "furni
                 "furniture_kitchen_cabinet", "furniture_bed_double", "furniture_cabinet_television", "furniture_side_table_drawers")
 
 
-def scatter_cover(m, count, seed, spacing=2.5, kinds=COVER_INDOOR, avoid=(), avoid_r=0.0):
+def scatter_cover(m, count, seed, spacing=2.5, kinds=COVER_INDOOR, avoid=(), avoid_r=0.0, clear=2.0, floor_y=0.0):
     """Cover on the clearest open floor, the same every run: a seeded shuffle of the open floor's
     spots (2 m of clear floor round each, the 1.5 m grid), each at least `spacing` metres from the
     last, turned to face a wall's way at random. Placed before the build, so spawns settle round it."""
     import random
     rng = random.Random(seed)
-    spots = [s for s in m.spots(step=1.5, top=400) if s[0] >= 2.0]
+    spots = [s for s in m.spots(y=floor_y, step=1.5, top=400) if s[0] >= clear]
     rng.shuffle(spots)
     placed = []
     for _size, x, z in spots:
         if len(placed) >= count:
             break
-        if all((x - a) ** 2 + (z - b) ** 2 >= avoid_r ** 2 for a, b in avoid) and all((x - a) ** 2 + (z - b) ** 2 >= spacing ** 2 for a, b in placed):
-            m.prop(rng.choice(kinds), x, z, yaw=rng.choice((0.0, 90.0, 180.0, 270.0)))
+        if all((x - a) ** 2 + (z - b) ** 2 >= rad ** 2 for a, b, rad in avoid) and all((x - a) ** 2 + (z - b) ** 2 >= spacing ** 2 for a, b in placed):
+            m.prop(rng.choice(kinds), x, z, yaw=rng.choice((0.0, 90.0, 180.0, 270.0)), y=floor_y)
             placed.append((x, z))
     return len(placed)
 
@@ -924,6 +932,10 @@ def main(argv):
     cover = 0
     seekers_at = None
     cover_gap = 2.5
+    cover_clear = 2.0
+    hiders_far = 0.0
+    hiders_at = None
+    cover_away = (0.0, 0.0)
     lobby = None
     cover_seed = 7
     drop_kinds = []
@@ -945,6 +957,14 @@ def main(argv):
             cover_seed = int(a[13:])
         elif a.startswith("--lobby="):
             lobby = tuple(float(t) for t in a[8:].split(","))
+        elif a.startswith("--hiders-at="):
+            hiders_at = tuple(float(t) for t in a[12:].split(","))
+        elif a.startswith("--cover-away="):
+            cover_away = tuple(float(t) for t in a[13:].split(","))
+        elif a.startswith("--hiders-far="):
+            hiders_far = float(a[13:])
+        elif a.startswith("--cover-clear="):
+            cover_clear = float(a[14:])
         elif a.startswith("--cover-gap="):
             cover_gap = float(a[12:])
         elif a.startswith("--cover="):
@@ -1105,16 +1125,34 @@ def main(argv):
         seek0 = set(near0[:max(2, min(4, len(starts) // 3))])
         keep_hiders = {i for i in range(len(starts)) if i not in seek0
                        and (g0[i][0] - g0[0][0]) ** 2 + (g0[i][2] - g0[0][2]) ** 2 <= lobby[0] ** 2}
-    if cover:
-        avoid = [(g0[i][0], g0[i][2]) for i in keep_hiders] if keep_hiders else []
-        print("cover furniture: %d placed" % scatter_cover(m, cover, seed=cover_seed, spacing=cover_gap, avoid=avoid, avoid_r=lobby[1] if lobby else 0.0))
-    # Seekers count together at one end: the starts nearest the first one. Everybody else hides,
-    # from wherever the author put them, spread out as the author spread them.
     gstarts = [gd(vec(e["origin"])) for e in starts]
     order = sorted(range(len(starts)), key=lambda i: (gstarts[i][0] - gstarts[0][0]) ** 2 + (gstarts[i][2] - gstarts[0][2]) ** 2)
     seek = set(order[:max(2, min(4, len(starts) // 3))])
+    # The finished map is shifted so a floor box is centred on the origin (below); --hiders-at and --cover-away are
+    # in the finished coordinates, so find that shift now, from the floor box nearest the seekers.
+    ys = sorted((support(gstarts[i][0], gstarts[i][2], None, 0.0, gstarts[i][1] + 0.6) or gstarts[i][1] - 0.05) for i in seek)
+    floor_y = round(ys[len(ys) // 2], 3) if ys and min(ys) > 0.5 else 0.0
+    cxs = sum(gstarts[i][0] for i in seek) / len(seek)
+    czs = sum(gstarts[i][2] for i in seek) / len(seek)
+    floors = [b for b in m.boxes if b.get("solid", True) and abs(b["at"][1] + b["size"][1] / 2 - floor_y) < 0.05 and b["size"][0] > 4.0 and b["size"][2] > 4.0]
+    early = min(floors, key=lambda b: (b["at"][0] - cxs) ** 2 + (b["at"][2] - czs) ** 2)["at"] if floors else (0.0, 0.0, 0.0)
+    eox, eoz = early[0], early[2]
+    if hiders_at:
+        hiders_at = (hiders_at[0] + eox, hiders_at[1] + eoz, hiders_at[2])
+    if cover:
+        away = [(gstarts[i][0], gstarts[i][2], cover_away[1]) for i in seek] if not seekers_at else [(seekers_at[0] + eox, seekers_at[1] + eoz, cover_away[1])]
+        if hiders_at:
+            away.append((hiders_at[0], hiders_at[1], cover_away[0]))
+        avoid = [(g0[i][0], g0[i][2], lobby[1]) for i in keep_hiders] if keep_hiders else []
+        print("cover furniture: %d placed" % scatter_cover(m, cover, seed=cover_seed, spacing=cover_gap, avoid=avoid + away, clear=cover_clear, floor_y=floor_y))
+    # Seekers count together at one end: the starts nearest the first one. Everybody else hides,
+    # from wherever the author put them, spread out as the author spread them.
     for i, e in enumerate(starts):
         if keep_hiders is not None and i not in seek and i not in keep_hiders:
+            continue
+        if hiders_at and i not in seek and (gstarts[i][0] - hiders_at[0]) ** 2 + (gstarts[i][2] - hiders_at[1]) ** 2 > hiders_at[2] ** 2:
+            continue
+        if hiders_far and i not in seek and min((gstarts[i][0] - gstarts[j][0]) ** 2 + (gstarts[i][2] - gstarts[j][2]) ** 2 for j in seek) < hiders_far ** 2:
             continue
         gx, gy, gz = gstarts[i]
         ang = vec(e.get("angles", "0 0 0"))
@@ -1124,11 +1162,13 @@ def main(argv):
     # A hiding game wants a dozen places to start from: more are taken from the clearest open
     # floor, at least 3 m from any other start.
     have = [(sp["at"][0], sp["at"][2]) for side in m.spawns.values() for sp in side]
-    for size, x, z in m.spots(step=1.5, top=60):
+    for size, x, z in m.spots(y=floor_y, step=1.0, top=400) if hiders_at else m.spots(step=1.5, top=60):
         if len(m.spawns["hiders"]) >= 12:
             break
-        if all((x - a) ** 2 + (z - b) ** 2 >= 9.0 for a, b in have):
-            m.spawn("hiders", x, z, yaw=0.0)
+        if hiders_at and (x - hiders_at[0]) ** 2 + (z - hiders_at[1]) ** 2 > hiders_at[2] ** 2:
+            continue
+        if all((x - a) ** 2 + (z - b) ** 2 >= (1.5 if hiders_at else 9.0) for a, b in have):
+            m.spawn("hiders", x, z, yaw=0.0, y=floor_y + 0.05 if hiders_at else 0.0)
             have.append((x, z))
     hy = sorted(sp["at"][1] for sp in m.spawns["seekers"])
     fy = round(hy[len(hy) // 2] - 0.05, 3) if hy else 0.0
