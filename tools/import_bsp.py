@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Converts a Source 1 community prop-hunt or hide-and-seek .bsp (VBSP 19/20) into a hide-n-seek map document.
 
-    tools/import_bsp.py <map.bsp> <id> "<Name>" <author> <page-url> [--out=maps/<id>.json] [--style=yard] [--field=round_seconds=300] [--drop-beside=x,z,kind] [--clear=x0,z0,x1,z1] [--prune-pockets] [--widen-doors] [--terrain] [--slide-doors] [--cover=N] [--cover-gap=m] [--lobby=r,gap] [--cover-seed=N] [--seekers-at=x,z] [--drop-kind=id] [--thin=id:N]
+    tools/import_bsp.py <map.bsp> <id> "<Name>" <author> <page-url> [--out=maps/<id>.json] [--style=yard] [--field=round_seconds=300] [--drop-beside=x,z,kind] [--clear=x0,z0,x1,z1] [--prune-pockets] [--widen-doors] [--no-doors] [--terrain] [--slide-doors] [--cover=N] [--cover-gap=m] [--lobby=r,gap] [--cover-seed=N] [--seekers-at=x,z] [--drop-kind=id] [--thin=id:N]
 
 --field=<name>=<number> sets a document number the map's own band wants (round_seconds, hide_seconds), found by headless_bots, so a rerun of the importer keeps it.
 
@@ -14,6 +14,8 @@ author walled in with counters too tall for a bot to step over, where one prop a
 
 --prune-pockets drops every floor prop that leaves a sliver of floor the bots' mesh cuts off (a small flat's
 beds and bookcases a hand off a wall), by a flood fill over a grid, instead of one --drop-beside at a time.
+
+--no-doors leaves every door out (the doorways stay open): a hotel's 0.9 m doors had stand-ins stuck beside the panels for 15 to 65 s on every cover seed tried.
 
 --widen-doors widens a flat's metre-wide doorways to the game's 1.4 m, which the bots' mesh can pass.
 
@@ -527,7 +529,7 @@ def brush_boxes(bsp, index):
     return out, 1
 
 
-def widen_doors(boxes, want=1.4):
+def widen_doors(boxes, want=1.4, doors=()):
     """Widens the doorways a flat's author made about a metre wide (--widen-doors).
 
     A door is a gap between two collinear wall slabs, a header box over it and a thin trim post
@@ -572,6 +574,13 @@ def widen_doors(boxes, want=1.4):
                     b["at"][axis] = round(mid, 3)
                 elif b["mat"] in ("concrete", "wood", "parquet") and (min(w, d) < 0.1) and b["at"][1] - h / 2 < 2.2:
                     boxes.remove(b)                                 # a trim post or lintel
+            # A door already hung in that gap (this runs after add_doors, which needs the author's
+            # narrow doorway to find the hinge's wall) grows with it, or its panel would leave a
+            # 0.25 m hole either side.
+            for dr in doors:
+                if abs(dr["at"][cross] - a["at"][cross]) < 0.2 and abs(dr["at"][axis] - mid) < 0.2:
+                    dr["size"][0] = round(want - 0.02, 3)
+                    dr["at"][axis] = round(mid, 3)
             done += 1
     return done
 
@@ -928,6 +937,7 @@ def main(argv):
     clears = []
     pockets = False
     widen = False
+    no_doors = False
     slide = False
     cover = 0
     seekers_at = None
@@ -946,6 +956,8 @@ def main(argv):
             out_path = a[6:]
         elif a == "--widen-doors":
             widen = True
+        elif a == "--no-doors":
+            no_doors = True
         elif a.startswith("--drop-kind="):
             drop_kinds.append(a[12:])
         elif a.startswith("--thin="):
@@ -1215,8 +1227,6 @@ def main(argv):
                     shift(v)
         for key in ("boxes", "props", "lights", "spawns", "toys", "doors"):
             shift(doc.get(key))
-    if widen:
-        print("widened %d doorways to 1.4 m" % widen_doors(doc["boxes"]))
     if pockets:
         print("pruned %d props that left a pocket the bots cannot leave" % prune_pockets(doc))
     # Spots are found beside props, so taking the prop away takes the spot: for a place the
@@ -1251,7 +1261,10 @@ def main(argv):
             sp["at"] = [round(seekers_at[0] + (i % 2) * 1.2, 3), sp["at"][1], round(seekers_at[1] + (i // 2) * 1.2, 3)]
             sp["yaw"] = 0.0
         print("seekers moved to (%.1f, %.1f)" % seekers_at)
-    add_doors(m, doc, bsp, (ox, oy, oz), slide)
+    if not no_doors:
+        add_doors(m, doc, bsp, (ox, oy, oz), slide)
+    if widen:
+        print("widened %d doorways to 1.4 m" % widen_doors(doc["boxes"], doors=doc["doors"]))
     out_path = out_path or os.path.join(build_maps.ROOT, "maps", mid + ".json")
     with open(out_path, "w") as f:
         f.write(json.dumps(doc, indent=1) + "\n")
