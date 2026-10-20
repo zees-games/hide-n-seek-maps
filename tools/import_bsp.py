@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Converts a Source 1 community prop-hunt or hide-and-seek .bsp (VBSP 19/20) into a hide-n-seek map document.
 
-    tools/import_bsp.py <map.bsp> <id> "<Name>" <author> <page-url> [--out=maps/<id>.json] [--style=yard] [--field=round_seconds=300] [--drop-beside=x,z,kind] [--clear=x0,z0,x1,z1] [--prune-pockets] [--widen-doors] [--no-doors] [--terrain] [--slide-doors] [--cover=N] [--cover-gap=m] [--lobby=r,gap] [--cover-seed=N] [--seekers-at=x,z] [--drop-kind=id] [--thin=id:N]
+    tools/import_bsp.py <map.bsp> <id> "<Name>" <author> <page-url> [--out=maps/<id>.json] [--style=yard] [--field=round_seconds=300] [--drop-beside=x,z,kind] [--clear=x0,z0,x1,z1] [--prune-pockets] [--widen-doors] [--no-doors] [--terrain] [--slide-doors] [--cover=N] [--cover-gap=m] [--lobby=r,gap] [--cover-seed=N] [--seekers-at=x,z] [--anchor=N] [--drop-kind=id] [--thin=id:N]
 
 --field=<name>=<number> sets a document number the map's own band wants (round_seconds, hide_seconds), found by headless_bots, so a rerun of the importer keeps it.
 
@@ -44,6 +44,8 @@ where it spawned (59 of 144 walked 8 m), and the game is the walk to somewhere t
 --cover-clear=m sets how much clear floor (2 m by default) a piece of cover wants round it: a small flat has no 2 m of open floor, so 0 pieces were placed.
 
 --cover-gap=m sets how far apart --cover's furniture stands (2.5 m by default; a hotel of small rooms had room for 27 at that gap).
+
+--anchor=N makes start number N (counting the .bsp's info_player_start entries from 0) the seekers' lobby, in place of the first: a map whose first start is a stray on another storey seeded the seekers into a basement.
 
 --seekers-at=x,z (in the finished map's coordinates) stands the seekers in a 2 x 2 block there, whatever the author's starts
 were: a small hotel's seekers began a few metres from the hiders' lobby, so the first was caught in two seconds and
@@ -470,6 +472,7 @@ def main(argv):
     slide = False
     cover = 0
     seekers_at = None
+    anchor = 0
     cover_gap = 2.5
     cover_clear = 2.0
     hiders_far = 0.0
@@ -492,6 +495,8 @@ def main(argv):
         elif a.startswith("--thin="):
             k, _, n = a[7:].partition(":")
             thin[k] = int(n)
+        elif a.startswith("--anchor="):
+            anchor = int(a[9:])
         elif a.startswith("--seekers-at="):
             seekers_at = tuple(float(t) for t in a[13:].split(","))
         elif a.startswith("--cover-seed="):
@@ -668,12 +673,12 @@ def main(argv):
     keep_hiders = None
     if lobby:
         g0 = [gd(vec(e["origin"])) for e in starts]
-        near0 = sorted(range(len(starts)), key=lambda i: (g0[i][0] - g0[0][0]) ** 2 + (g0[i][2] - g0[0][2]) ** 2)
+        near0 = sorted(range(len(starts)), key=lambda i: (g0[i][0] - g0[anchor][0]) ** 2 + (g0[i][2] - g0[anchor][2]) ** 2)
         seek0 = set(near0[:max(2, min(4, len(starts) // 3))])
         keep_hiders = {i for i in range(len(starts)) if i not in seek0
-                       and (g0[i][0] - g0[0][0]) ** 2 + (g0[i][2] - g0[0][2]) ** 2 <= lobby[0] ** 2}
+                       and (g0[i][0] - g0[anchor][0]) ** 2 + (g0[i][2] - g0[anchor][2]) ** 2 <= lobby[0] ** 2}
     gstarts = [gd(vec(e["origin"])) for e in starts]
-    order = sorted(range(len(starts)), key=lambda i: (gstarts[i][0] - gstarts[0][0]) ** 2 + (gstarts[i][2] - gstarts[0][2]) ** 2)
+    order = sorted(range(len(starts)), key=lambda i: (gstarts[i][0] - gstarts[anchor][0]) ** 2 + (gstarts[i][2] - gstarts[anchor][2]) ** 2)
     seek = set(order[:max(2, min(4, len(starts) // 3))])
     # The finished map is shifted so a floor box is centred on the origin (below); --hiders-at and --cover-away are
     # in the finished coordinates, so find that shift now, from the floor box nearest the seekers.
@@ -729,6 +734,28 @@ def main(argv):
         if spot:
             m.toy(tid, spot[0], spot[1], y=fy, near=near)
             have.append(spot)
+    if len(m.spawns["hiders"]) > 64:
+        # HsMapDoc.MAX_SPAWNS is 64 a side; a hundred starts spread over three storeys keep an even spread, farthest-point first.
+        hs = m.spawns["hiders"]
+        kept = [hs[0]]
+        while len(kept) < 60:
+            kept.append(max(hs, key=lambda h: min((h["at"][0] - k["at"][0]) ** 2 + (h["at"][1] - k["at"][1]) ** 2 * 4 + (h["at"][2] - k["at"][2]) ** 2 for k in kept)))
+        print("hider starts thinned from %d to %d" % (len(hs), len(kept)))
+        m.spawns["hiders"][:] = kept
+    if len(m.lights) > 128:
+        # The document takes 128 lights at most (HsMapDoc.MAX_LIGHTS). Keep the lights greedily, dropping any within a radius of one
+        # already kept, and widen the radius until they fit: a lamp-per-ceiling-tile map keeps an even spread, not its first 128.
+        before, radius = len(m.lights), 0.5
+        while True:
+            kept = []
+            for lt in m.lights:
+                if all((lt["at"][0] - k["at"][0]) ** 2 + (lt["at"][1] - k["at"][1]) ** 2 + (lt["at"][2] - k["at"][2]) ** 2 >= radius ** 2 for k in kept):
+                    kept.append(lt)
+            if len(kept) <= 128:
+                break
+            radius += 0.25
+        m.lights[:] = kept
+        print("lights thinned from %d to %d (radius %.2f m)" % (before, len(kept), radius))
     print("props %d  lights %d  spawns %d  dropped models %s" % (len(m.props), len(m.lights), len(starts), dropped))
     doc = m.build()
     # Move the map so its origin stands on open ground. The collision audit tests a drawn
