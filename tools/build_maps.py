@@ -404,6 +404,17 @@ class Map:
                 sx, sz = abs(sx * math.cos(yaw)) + abs(sz * math.sin(yaw)), abs(sx * math.sin(yaw)) + abs(sz * math.cos(yaw))
             if abs(x - bx) < sx / 2 + self.PERSON and abs(z - bz) < sz / 2 + self.PERSON:
                 return "a %s box" % b["mat"]
+        # A shut door's panel is a wall to whoever spawns against it: an imported flat's start
+        # stood a hand from a hinged door and was inside it once the importer hung all six.
+        for d_ in self.doors:
+            (dx, dy, dz), (sx, sy, sz) = d_["at"], d_["size"]
+            if dy + sy / 2 < lo or dy - sy / 2 > hi:
+                continue
+            if d_.get("yaw"):
+                yaw = math.radians(d_["yaw"])
+                sx, sz = abs(sx * math.cos(yaw)) + abs(sz * math.sin(yaw)), abs(sx * math.sin(yaw)) + abs(sz * math.cos(yaw))
+            if abs(x - dx) < sx / 2 + self.PERSON and abs(z - dz) < sz / 2 + self.PERSON:
+                return "a door"
         return None
 
     def _floored(self, x, y, z, edge=0.1):

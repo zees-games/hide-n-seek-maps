@@ -800,6 +800,12 @@ def main(argv):
         docboxes.add_doors(m, doc, bsp.entities, (ox, oy, oz), slide, scale=S)
     if widen:
         print("widened %d doorways to 1.4 m" % docboxes.widen_doors(doc["boxes"], doors=doc["doors"]))
+    # The doors are hung after build() settled the spawns, so one that stood against a doorway is
+    # in the panel now (hs_apartment's 31st): settle again, with the doors in the way.
+    if doc["doors"] is m.doors and doc["boxes"] is m.boxes and doc["spawns"] is m.spawns:
+        m._settle_spawns()
+    else:
+        raise SystemExit("the document no longer shares the map's lists: settle the spawns from the document")
     out_path = out_path or os.path.join(build_maps.ROOT, "maps", mid + ".json")
     with open(out_path, "w") as f:
         f.write(json.dumps(doc, indent=1) + "\n")
