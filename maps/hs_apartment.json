@@ -32,6 +32,8 @@
   "ambient_energy": 0.5
  },
  "kill_y": -20.0,
+ "players_per_seeker": 2.0,
+  "seeker_pace": 0.6,
  "source": "https://gamebanana.com/mods/61479",
  "boxes": [
   {
@@ -4010,10 +4012,9 @@
     2.042,
     0.06
    ],
-   "motion": "swing",
+   "motion": "slide",
    "hinge": "left",
    "mat": "wood",
-   "angle": -100.0,
    "tint": [
     0.55,
     0.4,
@@ -4032,11 +4033,10 @@
     2.042,
     0.06
    ],
-   "motion": "swing",
+   "motion": "slide",
    "hinge": "right",
    "mat": "wood",
    "yaw": 90.0,
-   "angle": 100.0,
    "tint": [
     0.55,
     0.4,
@@ -4055,11 +4055,10 @@
     2.042,
     0.06
    ],
-   "motion": "swing",
+   "motion": "slide",
    "hinge": "left",
    "mat": "wood",
    "yaw": 90.0,
-   "angle": -100.0,
    "tint": [
     0.55,
     0.4,
@@ -4078,11 +4077,10 @@
     2.042,
     0.06
    ],
-   "motion": "swing",
+   "motion": "slide",
    "hinge": "right",
    "mat": "wood",
    "yaw": 90.0,
-   "angle": 100.0,
    "tint": [
     0.55,
     0.4,
@@ -4101,11 +4099,10 @@
     2.042,
     0.06
    ],
-   "motion": "swing",
+   "motion": "slide",
    "hinge": "left",
    "mat": "wood",
    "yaw": 90.0,
-   "angle": -100.0,
    "tint": [
     0.55,
     0.4,
@@ -4124,10 +4121,9 @@
     2.042,
     0.06
    ],
-   "motion": "swing",
+   "motion": "slide",
    "hinge": "right",
    "mat": "wood",
-   "angle": 100.0,
    "tint": [
     0.55,
     0.4,

@@ -674,12 +674,12 @@ def main(argv):
     if lobby:
         g0 = [gd(vec(e["origin"])) for e in starts]
         near0 = sorted(range(len(starts)), key=lambda i: (g0[i][0] - g0[anchor][0]) ** 2 + (g0[i][2] - g0[anchor][2]) ** 2)
-        seek0 = set(near0[:max(2, min(4, len(starts) // 3))])
+        seek0 = set(near0[:max(3, min(4, len(starts) // 3))])
         keep_hiders = {i for i in range(len(starts)) if i not in seek0
                        and (g0[i][0] - g0[anchor][0]) ** 2 + (g0[i][2] - g0[anchor][2]) ** 2 <= lobby[0] ** 2}
     gstarts = [gd(vec(e["origin"])) for e in starts]
     order = sorted(range(len(starts)), key=lambda i: (gstarts[i][0] - gstarts[anchor][0]) ** 2 + (gstarts[i][2] - gstarts[anchor][2]) ** 2)
-    seek = set(order[:max(2, min(4, len(starts) // 3))])
+    seek = set(order[:max(3, min(4, len(starts) // 3))])
     # The finished map is shifted so a floor box is centred on the origin (below); --hiders-at and --cover-away are
     # in the finished coordinates, so find that shift now, from the floor box nearest the seekers.
     ys = sorted((support(gstarts[i][0], gstarts[i][2], None, 0.0, gstarts[i][1] + 0.6) or gstarts[i][1] - 0.05) for i in seek)

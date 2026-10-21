@@ -35,6 +35,8 @@ Every length is metres, every angle degrees, every time seconds. A position is `
 
 - `id` is lowercase a to z, 0 to 9 and `_`. A file whose id is `hs_practice` replaces the built-in practice house.
 - `round_seconds` and `hide_seconds`: how long this map's rounds and hides last; 0 is the server's own (`hs_round_seconds`, `hs_hide_seconds`), and the server's is always the ceiling.
+- `players_per_seeker` (optional, 0 or absent is the server's): a seeker for every this many players on this map, when that is fewer than the server's own rule (`hs_players_per_seeker`). A big building wants more seekers than a lobby of seven draws: the server's rule can only be made stricter by a map, never looser. The importer sets it with `--field=players_per_seeker=N`.
+- `seeker_pace` (optional, 0 or absent is the game's 0.28): how fast a seeker searches, 0.1 to 1 of walking speed. A map whose furniture and storeys hide more than a slow search clears in a round (the converted flats and restaurant) wants it raised; the restaurant, once its basement was reachable, wanted it lowered to 0.25. Set it with `--field=seeker_pace=N`.
 - `kill_y`: anybody below it has fallen: a hider is caught by it and a seeker starts again. Put it under anything a player could fall off.
 - `environment`: every field is optional and the values above are the defaults. `fog` is a density; 0.0025 is a light haze over a big outdoor map, and 0.008 already hides everything past forty metres.
 
