@@ -8,6 +8,8 @@ The maps game-hide-n-seek plays, as JSON documents. Read `../../CLAUDE.md` and `
 
 **Prop sizes are a snapshot** (`tools/prop_sizes.json`), copied from game-hide-n-seek's `props/catalogue.json` by `--sync-sizes`, so the builder (and CI) runs without the game checked out. **`on()` rests a prop on what is under its footprint**, from the support's `tops` grid (copied from the game's `props/pieces.json`, its part-shaped collision): a bed's mattress, not its headboard's height. Re-run `--sync-sizes` after the game re-measures its props.
 
+**`tools/import_bsp.py` cuts a BSP brush into boxes with dot-map's `boxes.decompose` (never a local copy; it is the adapter: document format, texture and prop tables, per-map flags).** The flags a committed imported map was made with are not recorded, so a re-import does not reproduce its document byte for byte (and neither does the old importer). The check that does hold: a brush's boxes against the previous local cutter, which differ only where dot-map is the more correct (slabs along the slope, a thin prism as slabs rather than a rectangle twice its size).
+
 ## What a hide-and-seek map needs, and the helpers that make it
 
 A map is judged by three things the genre's best maps share: **more than one way round** (a chase into a dead end is over), **somewhere up** (a roof, a loft, a gallery, a rack), and **somewhere a seeker has to crouch to look** (a crawl space, a rack's bottom shelf, the space under a bridge). Every map here has all three, and the builder has one call for each part:
