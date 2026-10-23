@@ -1,0 +1,110 @@
+{
+    "schema": 1,
+    "title": "Hide and Seek maps",
+    "kinds": [
+        "map"
+    ],
+    "games": [
+        "gamemann/game-hide-n-seek"
+    ],
+    "entries": [
+        {
+            "kind": "map",
+            "id": "hs_apartment",
+            "name": "Apartment",
+            "scene": "maps/hs_apartment.json",
+            "map_kind": "hideseek"
+        },
+        {
+            "kind": "map",
+            "id": "hs_apartments",
+            "name": "Larkspur Court",
+            "scene": "maps/hs_apartments.json",
+            "map_kind": "hideseek"
+        },
+        {
+            "kind": "map",
+            "id": "hs_camp",
+            "name": "Pinehollow Camp",
+            "scene": "maps/hs_camp.json",
+            "map_kind": "hideseek"
+        },
+        {
+            "kind": "map",
+            "id": "hs_castle",
+            "name": "Ravenhold Castle",
+            "scene": "maps/hs_castle.json",
+            "map_kind": "hideseek"
+        },
+        {
+            "kind": "map",
+            "id": "hs_frontyard",
+            "name": "Front Yard",
+            "scene": "maps/hs_frontyard.json",
+            "map_kind": "hideseek"
+        },
+        {
+            "kind": "map",
+            "id": "hs_mall",
+            "name": "Galleria Mall",
+            "scene": "maps/hs_mall.json",
+            "map_kind": "hideseek"
+        },
+        {
+            "kind": "map",
+            "id": "hs_manor",
+            "name": "Hollowmere Manor",
+            "scene": "maps/hs_manor.json",
+            "map_kind": "hideseek"
+        },
+        {
+            "kind": "map",
+            "id": "hs_museum",
+            "name": "Halden Museum",
+            "scene": "maps/hs_museum.json",
+            "map_kind": "hideseek"
+        },
+        {
+            "kind": "map",
+            "id": "hs_park",
+            "name": "Pinecrest Park",
+            "scene": "maps/hs_park.json",
+            "map_kind": "hideseek"
+        },
+        {
+            "kind": "map",
+            "id": "hs_restaurant",
+            "name": "Restaurant",
+            "scene": "maps/hs_restaurant.json",
+            "map_kind": "hideseek"
+        },
+        {
+            "kind": "map",
+            "id": "hs_school",
+            "name": "Brookside School",
+            "scene": "maps/hs_school.json",
+            "map_kind": "hideseek"
+        },
+        {
+            "kind": "map",
+            "id": "hs_ship",
+            "name": "The Marigold",
+            "scene": "maps/hs_ship.json",
+            "map_kind": "hideseek"
+        },
+        {
+            "kind": "map",
+            "id": "hs_village",
+            "name": "Thistle Green",
+            "scene": "maps/hs_village.json",
+            "map_kind": "hideseek"
+        },
+        {
+            "kind": "map",
+            "id": "hs_warehouse",
+            "name": "Dockside Warehouse",
+            "scene": "maps/hs_warehouse.json",
+            "map_kind": "hideseek"
+        }
+    ]
+}
