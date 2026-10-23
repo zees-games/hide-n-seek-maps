@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Converts a Source 1 community prop-hunt or hide-and-seek .bsp (VBSP 19/20) into a hide-n-seek map document.
 
-    tools/import_bsp.py <map.bsp> <id> "<Name>" <author> <page-url> [--out=maps/<id>.json] [--style=yard] [--field=round_seconds=300] [--drop-beside=x,z,kind] [--clear=x0,z0,x1,z1] [--prune-pockets] [--widen-doors] [--no-doors] [--terrain] [--slide-doors] [--scale=k] [--drop-door=x,z] [--cover=N] [--cover-gap=m] [--lobby=r,gap] [--cover-seed=N] [--seekers-at=x,z] [--anchor=N] [--drop-kind=id] [--thin=id:N]
+    tools/import_bsp.py <map.bsp> <id> "<Name>" <author> <page-url> [--out=maps/<id>.json] [--style=yard] [--field=round_seconds=300] [--drop-beside=x,z,kind] [--clear=x0,z0,x1,z1] [--prune-pockets] [--widen-doors] [--no-doors] [--terrain] [--terrain-budget=bytes] [--graft-terrain=<doc.json>] [--slide-doors] [--scale=k] [--drop-door=x,z] [--cover=N] [--cover-gap=m] [--lobby=r,gap] [--cover-seed=N] [--seekers-at=x,z] [--anchor=N] [--drop-kind=id] [--thin=id:N]
 
 --field=<name>=<number> sets a document number the map's own band wants (round_seconds, hide_seconds), found by headless_bots, so a rerun of the importer keeps it.
 
@@ -55,8 +55,9 @@ where it spawned (59 of 144 walked 8 m), and the game is the walk to somewhere t
 were: a small hotel's seekers began a few metres from the hiders' lobby, so the first was caught in two seconds and
 the map's whole round lasted under thirty. The far end of the building makes the seekers walk the length of it.
 
---terrain turns the map's displacement ground (sculpted terrain, which is not a brush) into a stepped field of
-ground boxes; without it a map whose yard is terrain has no floor.
+--terrain turns the map's displacement ground (sculpted terrain, which is not a brush) into dot-map's heightfield (`terrain` in the
+document, fitted to --terrain-budget bytes); without it a map whose yard is terrain has no floor. --graft-terrain=<doc.json> <bsp> swaps a
+committed document's old stepped field of boxes for the heightfield and sets what stood on it down on the new ground, leaving the rest as it is.
 
 --style=yard gives the developer-grid boxes a suburban surface by their shape (a yard map the
 author left unskinned); other maps keep the surface their material names say.
@@ -93,9 +94,114 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import bsp_read  # noqa: E402  (a shim over dot-map's shared reader; it puts dotbsp on sys.path)
 from dotbsp import boxes as dboxes, docboxes  # noqa: E402  (the shared passes over a document's boxes)
+from dotbsp import terrain as dterrain  # noqa: E402
 import build_maps  # noqa: E402
 
 S = 0.01905
+
+
+TERRAIN_TINT = (0.85, 0.9, 0.78)
+
+
+def terrain_tris(bsp):
+    """The map's displacement triangles, in map units."""
+    tris = []
+    for f in bsp.model_faces(0):
+        if f[6] >= 0:
+            tris += bsp.displacement_tris(f)
+    return tris
+
+
+def swap_terrain(doc, tris, mat, tint, budget=24000):
+    """Replaces the stepped box field `--terrain` cut with dot-map's heightfield (`doc["terrain"]`).
+
+    The field is found in the finished document by cutting it again and matching boxes, which also
+    gives the shift the importer moved the map by, so this runs on a fresh import and on a
+    committed document (`--graft-terrain`) alike. What stood on a box of the field is set down on
+    the heightfield instead; the rest of the document is untouched."""
+    cells = []
+    for c in dboxes.terrain_cells(tris):
+        (x0, x1), (y0, y1), (z0, z1) = c["x"], c["z"], c["y"]
+        x0, x1, y0, y1, z0, z1 = x0 * S, x1 * S, y0 * S, y1 * S, -z1 * S, -z0 * S
+        if x1 - x0 <= 0.001 or y1 - y0 <= 0.001 or z1 - z0 <= 0.001:
+            continue
+        cells.append((build_maps.v3((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2), build_maps.v3(x1 - x0, y1 - y0, z1 - z0)))
+    want_tint = list(tint) if tint else None
+    by_size = {}
+    for b in doc["boxes"]:
+        if b.get("mat") == mat and b.get("tint") == want_tint and b.get("solid", True):
+            by_size.setdefault(tuple(b["size"]), []).append(b)
+    votes = {}
+    for at, size in cells[::max(1, len(cells) // 300)]:
+        for b in by_size.get(tuple(size), ()):
+            k = tuple(round(b["at"][i] - at[i], 3) for i in range(3))
+            votes[k] = votes.get(k, 0) + 1
+    if not votes:
+        raise SystemExit("swap_terrain: no box of the document matches the stepped field (mat %s)" % mat)
+    shift = max(votes, key=votes.get)
+    index = {(tuple(round(b["at"][i], 3) for i in range(3)), tuple(b["size"])): b for bs in by_size.values() for b in bs}
+    old = []
+    for at, size in cells:
+        b = index.get((tuple(round(at[i] + shift[i], 3) for i in range(3)), tuple(size)))
+        if b is not None:
+            old.append(b)
+    if len(old) < max(20, len(cells) * 0.25):
+        raise SystemExit("swap_terrain: only %d of %d field boxes found; the document was not cut with this field" % (len(old), len(cells)))
+    gone = {id(b) for b in old}
+    doc["boxes"][:] = [b for b in doc["boxes"] if id(b) not in gone]
+    lo = [min(b["at"][i] - b["size"][i] / 2 for b in old) for i in range(3)]
+    hi = [max(b["at"][i] + b["size"][i] / 2 for b in old) for i in range(3)]
+    moved = [tuple(p[i] + shift[i] for i in range(3)) for t in dterrain.game_tris(tris, S) for p in t]
+    gtris = [tuple(moved[k:k + 3]) for k in range(0, len(moved), 3)]
+    # Only where the document had field boxes: the importer left out the rest (far scenery, a
+    # roof's snow) on purpose, and ground there would stand in a doorway.
+    grid = {}
+    for b in old:
+        for gx in range(int((b["at"][0] - b["size"][0] / 2) // 4), int((b["at"][0] + b["size"][0] / 2) // 4) + 1):
+            for gz in range(int((b["at"][2] - b["size"][2] / 2) // 4), int((b["at"][2] + b["size"][2] / 2) // 4) + 1):
+                grid.setdefault((gx, gz), []).append(b)
+
+    def under_field(x, z):
+        return any(abs(x - b["at"][0]) <= b["size"][0] / 2 + 0.01 and abs(z - b["at"][2]) <= b["size"][2] / 2 + 0.01 for b in grid.get((int(x // 4), int(z // 4)), ()))
+
+    # And only the layer the field had: displacements overlap (a roof's snow over the ground), and
+    # the heightfield keeps the highest, a cliff in a doorway where the field took the ground.
+    def on_layer(t):
+        cx, cy, cz = (sum(p[i] for p in t) / 3 for i in range(3))
+        return any(abs(cx - b["at"][0]) <= b["size"][0] / 2 + 0.01 and abs(cz - b["at"][2]) <= b["size"][2] / 2 + 0.01
+                   and abs(cy - (b["at"][1] + b["size"][1] / 2)) <= 1.5 for b in grid.get((int(cx // 4), int(cz // 4)), ()))
+
+    gtris = [t for t in gtris if on_layer(t)]
+    hf, size = dterrain.fit(gtris, (lo[0], lo[2], hi[0], hi[2]), budget, margin_m=0.5, keep=under_field)
+    if hf is None:
+        raise SystemExit("swap_terrain: the displacements produced no heightfield")
+    enc = hf.encode(0.05, None, mat)
+    if tint:
+        enc["tint"] = list(tint)
+    ground = dterrain.Heightfield.decode(enc)[0]
+    tops = [(b["at"][0] - b["size"][0] / 2, b["at"][0] + b["size"][0] / 2, b["at"][2] - b["size"][2] / 2, b["at"][2] + b["size"][2] / 2, b["at"][1] + b["size"][1] / 2) for b in old]
+
+    def land(o, tag):
+        x, y, z = o["at"]
+        for x0, x1, z0, z1, top in tops:
+            if x0 <= x <= x1 and z0 <= z <= z1 and abs(y - top) < 0.12:
+                h = ground.height(x, z)
+                if h is not None:
+                    o["at"] = [x, round(h, 3), z]
+                    counts[tag] = counts.get(tag, 0) + 1
+                return
+
+    counts = {}
+    for o in doc.get("props", []):
+        land(o, "props")
+    for side in doc.get("spawns", {}).values():
+        for o in side:
+            land(o, "spawns")
+    for o in doc.get("toys", []):
+        land(o, "toys")
+    doc["terrain"] = enc
+    print("terrain: %d field boxes -> %dx%d heightfield at %.1f m, %d bytes; set down on it: %s" % (len(old), ground.nx, ground.nz, ground.cell, size, counts or "nothing"))
+    return ground
 
 # This game's catalogue has no food_* or survival_*: a person hides, not a bottle. "" drops.
 HS_SWAP = {
@@ -375,6 +481,8 @@ def main(argv):
     drop_kinds = []
     thin = {}
     terrain = False
+    graft = None
+    budget = 24000
     for a in argv[1:]:
         if a.startswith("--out="):
             out_path = a[6:]
@@ -415,6 +523,10 @@ def main(argv):
             S = 0.01905 * float(a[8:])
         elif a == "--terrain":
             terrain = True
+        elif a.startswith("--graft-terrain="):
+            graft = a[16:]
+        elif a.startswith("--terrain-budget="):
+            budget = int(a[17:])
         elif a == "--prune-pockets":
             pockets = True
         elif a.startswith("--style="):
@@ -427,6 +539,15 @@ def main(argv):
         elif a.startswith("--drop-beside="):
             t = a[14:].split(",")
             drops.append((float(t[0]), float(t[1]), t[2] if len(t) > 2 else ""))
+    if graft:
+        # A committed document keeps its hand edits and its flags: only its stepped field changes.
+        with open(graft) as f:
+            doc = json.load(f)
+        swap_terrain(doc, terrain_tris(bsp_read.Bsp(args[0]).load()), "grass", TERRAIN_TINT, budget)
+        with open(graft, "w") as f:
+            f.write(json.dumps(doc, indent=1) + "\n")
+        print("wrote", graft)
+        return
     bsp_path, mid, name, author, url = args[:5]
     bsp = bsp_read.Bsp(bsp_path).load()
     m = build_maps.Map(
@@ -476,10 +597,8 @@ def main(argv):
                     bx.pop("tint", None)
     if terrain:
         n = 0
-        tris = []
-        for f in bsp.model_faces(0):
-            if f[6] >= 0:
-                tris += bsp.displacement_tris(f)
+        tris = terrain_tris(bsp)
+        # The field is cut as boxes so props and spawns settle on it, then swapped (swap_terrain).
         for c in dboxes.terrain_cells(tris):
             # terrain_cells names the axes as the map does (z is height); this loop's y is the height, z the map's y.
             (x0, x1), (y0, y1), (z0, z1), mat = c["x"], c["z"], c["y"], "grass"
@@ -734,6 +853,8 @@ def main(argv):
         m._settle_spawns()
     else:
         raise SystemExit("the document no longer shares the map's lists: settle the spawns from the document")
+    if terrain:
+        swap_terrain(doc, tris, "grass", TERRAIN_TINT, budget)
     out_path = out_path or os.path.join(build_maps.ROOT, "maps", mid + ".json")
     with open(out_path, "w") as f:
         f.write(json.dumps(doc, indent=1) + "\n")
