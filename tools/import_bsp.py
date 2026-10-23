@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Converts a Source 1 community prop-hunt or hide-and-seek .bsp (VBSP 19/20) into a hide-n-seek map document.
 
-    tools/import_bsp.py <map.bsp> <id> "<Name>" <author> <page-url> [--out=maps/<id>.json] [--style=yard] [--field=round_seconds=300] [--drop-beside=x,z,kind] [--clear=x0,z0,x1,z1] [--prune-pockets] [--widen-doors] [--no-doors] [--terrain] [--slide-doors] [--cover=N] [--cover-gap=m] [--lobby=r,gap] [--cover-seed=N] [--seekers-at=x,z] [--anchor=N] [--drop-kind=id] [--thin=id:N]
+    tools/import_bsp.py <map.bsp> <id> "<Name>" <author> <page-url> [--out=maps/<id>.json] [--style=yard] [--field=round_seconds=300] [--drop-beside=x,z,kind] [--clear=x0,z0,x1,z1] [--prune-pockets] [--widen-doors] [--no-doors] [--terrain] [--slide-doors] [--scale=k] [--drop-door=x,z] [--cover=N] [--cover-gap=m] [--lobby=r,gap] [--cover-seed=N] [--seekers-at=x,z] [--anchor=N] [--drop-kind=id] [--thin=id:N]
 
 --field=<name>=<number> sets a document number the map's own band wants (round_seconds, hide_seconds), found by headless_bots, so a rerun of the importer keeps it.
 
@@ -18,6 +18,10 @@ beds and bookcases a hand off a wall), by a flood fill over a grid, instead of o
 --no-doors leaves every door out (the doorways stay open): a hotel's 0.9 m doors had stand-ins stuck beside the panels for 15 to 65 s on every cover seed tried.
 
 --widen-doors widens a flat's metre-wide doorways to the game's 1.4 m, which the bots' mesh can pass.
+
+--scale=k builds the whole map k times its real size (S in metres per unit), for a building so small that a seeker tours it in under a minute: rooms, doorways and stairs grow with it, props do not.
+
+--drop-door=x,z (repeatable, finished coordinates) leaves out the doors within 1.5 m of that point, the doorway stays open: a hotel's one door that stand-ins stuck beside for 20 s on every cover seed.
 
 --slide-doors makes every door slide into its wall instead of swinging, for a map whose doors stand
 in a small room or a narrow lobby where a stand-in lingered against an open panel for ten seconds.
@@ -346,6 +350,7 @@ COVER_INDOOR = ("furniture_bed_single", "furniture_bookcase_closed_wide", "furni
 
 
 def main(argv):
+    global S
     args = [a for a in argv[1:] if not a.startswith("--")]
     out_path = None
     style = ""
@@ -365,6 +370,7 @@ def main(argv):
     hiders_at = None
     cover_away = (0.0, 0.0)
     lobby = None
+    drop_doors = []
     cover_seed = 7
     drop_kinds = []
     thin = {}
@@ -403,6 +409,10 @@ def main(argv):
             cover = int(a[8:])
         elif a == "--slide-doors":
             slide = True
+        elif a.startswith("--drop-door="):
+            drop_doors.append(tuple(float(t) for t in a[12:].split(",")))
+        elif a.startswith("--scale="):
+            S = 0.01905 * float(a[8:])
         elif a == "--terrain":
             terrain = True
         elif a == "--prune-pockets":
@@ -711,6 +721,11 @@ def main(argv):
         print("seekers moved to (%.1f, %.1f)" % seekers_at)
     if not no_doors:
         docboxes.add_doors(m, doc, bsp.entities, (ox, oy, oz), slide, scale=S)
+    for dx, dz in drop_doors:
+        near = [d for d in doc["doors"] if (d["at"][0] - dx) ** 2 + (d["at"][2] - dz) ** 2 <= 1.5 ** 2]
+        for d in near:
+            doc["doors"].remove(d)
+        print("--drop-door=%.1f,%.1f: dropped %d door(s); the doorway stays open" % (dx, dz, len(near)))
     if widen:
         print("widened %d doorways to 1.4 m" % docboxes.widen_doors(doc["boxes"], doors=doc["doors"]))
     # The doors are hung after build() settled the spawns, so one that stood against a doorway is

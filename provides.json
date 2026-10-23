@@ -45,6 +45,13 @@
         },
         {
             "kind": "map",
+            "id": "hs_hotel",
+            "name": "Hotel",
+            "scene": "maps/hs_hotel.json",
+            "map_kind": "hideseek"
+        },
+        {
+            "kind": "map",
             "id": "hs_mall",
             "name": "Galleria Mall",
             "scene": "maps/hs_mall.json",
