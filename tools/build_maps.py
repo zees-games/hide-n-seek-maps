@@ -2383,8 +2383,6 @@ def mall():
          "ambient": [0.66, 0.66, 0.7], "ambient_energy": 0.55, "fog": 0.001},
         kill_y=-10.0,
     )
-    # The pilot of the photographic look (HsMaterials.PBR_KINDS); the other hand-made maps keep the pastel grid.
-    m.doc["look"] = "pbr"
     X0, X1, Z0, Z1 = -36.0, 36.0, -16.0, 16.0
     H = 4.0
     Y = (0.0, H)
@@ -3947,6 +3945,8 @@ def write_all(check):
     stale = []
     for mid, make in MAPS.items():
         doc = make()
+        # The photographic look (game-hide-n-seek's HsMaterials.PBR_KINDS); a client without the textures draws the pastel grid.
+        doc["look"] = "pbr"
         text = json.dumps(doc, indent=1, sort_keys=False) + "\n"
         path = os.path.join(ROOT, "maps", mid + ".json")
         if check:
