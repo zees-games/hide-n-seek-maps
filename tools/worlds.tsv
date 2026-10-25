@@ -2,4 +2,3 @@
 # id	store key	metres per unit	y0
 # metres per unit is 0.01905 times the import's --scale, so the pack and the document share one frame; the document's `world.offset` places it.
 hs_hotel	hideseek/ph_hotel	0.02667	0
-hs_restaurant	prophunt/ph_restaurant_os	0.01905	0
