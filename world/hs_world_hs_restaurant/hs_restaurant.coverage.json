@@ -1,0 +1,292 @@
+{
+ "format": "dot-bsp-coverage",
+ "version": 1,
+ "map": "ph_restaurant_os",
+ "sha256": "f91a7b5861d3ceffd39a109eafe60af00a5564eb1bdb915b5ebfe48d8a95c8e2",
+ "textures": {
+  "looked_up": 117,
+  "drawn": 120,
+  "by_tier": {
+   "addon": 44,
+   "default": 61,
+   "fallback": 12
+  },
+  "free_by_tier": {
+   "addon": 89,
+   "default": 9,
+   "nearest": 22
+  },
+  "nearest_photo": [
+   "brick/brickwall053d",
+   "brick/brickwall053e",
+   "brick/offwlla",
+   "building_template/building_template001a",
+   "building_template/building_template001k",
+   "building_template/building_template003a",
+   "building_template/building_template003b",
+   "building_template/building_template003i",
+   "building_template/building_template005a",
+   "building_template/building_template005c",
+   "concrete/concretefloor027a",
+   "concrete/concretefloor033b",
+   "concrete/concretestair003a",
+   "concrete/concretewall037b",
+   "gm_construct/flatgrass",
+   "metal/metalceiling004a",
+   "metal/metalstair_001idba",
+   "metal/metalstair_001idbb",
+   "metal/metalwall014a_cheap",
+   "nature/blenddirtgrass001a",
+   "nature/blenddirtgrass005a",
+   "nature/blendrockdirt008a",
+   "plaster/milwall003",
+   "plaster/offwllb",
+   "plaster/offwllc_02",
+   "plaster/slide",
+   "plaster/urban_plasterwall_05a",
+   "prop_idbs/goplaster/plaster_ceiling_02",
+   "prop_idbs/goplaster/plaster_ceiling_03",
+   "prop_idbs/goplaster/vostok_wall01",
+   "prop_idbs/goplaster/vostok_wall01b",
+   "prop_idbs/open_source_bb",
+   "prop_idbs_housing/toko/gorden",
+   "prop_idbs_housing/toko/gorden2",
+   "props_housing/env/brush/floors/floor_pool_blue",
+   "props_housing/env/brush/floors/floor_prison_shower",
+   "props_housing/env/brush/walls/wall_jailshower",
+   "props_housing/env/brush/walls/wall_pool_blue",
+   "props_housing/env/brush/walls/wall_restroombshower",
+   "props_housing/env/brush/walls/wall_shower_paleblue",
+   "props_housing/env/brush/walls/wall_toffee_high",
+   "props_housing/env/brush/walls/wall_toffee_tile",
+   "props_housing/env/wood/wood_mdfcabinetunit",
+   "props_housing/fish/gtaivtex/tf_twbrick2",
+   "props_housing/highrise/houseceiling",
+   "props_housing/highrise/se1_acoustic_stairwell_ceiling_01",
+   "props_housing/highrise/se1_metal_stainless_panels_01",
+   "props_housing/labs/se1_carpet_lab_floor_02",
+   "props_housing/labs/se1_carpet_lab_floor_03",
+   "props_housing/labs/se1_cement_lab_floor_02",
+   "props_housing/labs/se1_cement_lab_floor_03",
+   "props_housing/natalya/ceiling_01",
+   "props_housing/tile/marblefloor01",
+   "props_housing/warehouse/se1_door_gray_01",
+   "props_sims2/simstex/floor/tile/floor-dimondlighttile",
+   "props_sims2/simstex/floor/tile/floor-marbleandrattandiagonal",
+   "props_sims2/simstex/floor/tile/floor-pooldeck-concreteslab",
+   "props_sims2/simstexnightlife/floor/tile/floor-tileartdecotan-accent",
+   "quality/e8trim_dark",
+   "tile/tilewall006c",
+   "tools/toolsblack_cheap",
+   "wmod_tile/tilewall001a",
+   "wood/hr_w/wood_plank_a"
+  ]
+ },
+ "models": {
+  "looked_up": 274,
+  "by_tier": {
+   "default": 221,
+   "fallback": 45,
+   "skybox": 8
+  }
+ },
+ "sounds": {
+  "looked_up": 11,
+  "by_tier": {
+   "default": 10,
+   "fallback": 1
+  }
+ },
+ "classes": {
+  "distinct": 64,
+  "entities": 1921,
+  "by_tier": {
+   "default": 64
+  }
+ },
+ "keys": {
+  "catalogue": true,
+  "unmapped": {
+   "ambient_generic": [
+    "pitch"
+   ],
+   "func_brush": [
+    "disableshadow"
+   ],
+   "func_button": [
+    "resto_elevbtn"
+   ],
+   "func_door": [
+    "ph_forceclose"
+   ],
+   "info_node_hint": [
+    "starthintdisabled"
+   ],
+   "item_healthkit": [
+    "solid"
+   ],
+   "ph_decoy_spawner": [
+    "entity",
+    "spawnchance",
+    "spawnflags",
+    "spawnmax",
+    "spawnmaxtype",
+    "spawnrandom",
+    "takemodelfrommap"
+   ],
+   "ph_map_settings": [
+    "alwayshasdecoy",
+    "fullarmor",
+    "limitclass",
+    "ultpoint",
+    "unlockdoors"
+   ],
+   "ph_model_bans": [
+    "model1",
+    "model2",
+    "model3",
+    "spawnflags"
+   ],
+   "ph_teamitem_spawner": [
+    "amount",
+    "spawnent",
+    "spawnflags",
+    "spawnontarget"
+   ],
+   "prop_door_rotating": [
+    "solid"
+   ],
+   "prop_physics": [
+    "solid"
+   ],
+   "prop_physics_override": [
+    "solid"
+   ],
+   "weapon_frag": [
+    "body",
+    "solid"
+   ],
+   "weapon_rpg": [
+    "body",
+    "solid"
+   ]
+  }
+ },
+ "links": {
+  "total": 127,
+  "unresolved": 0
+ },
+ "lists": {
+  "textures_unmapped": [
+   "PROPS_HOUSING/ENV/BRUSH/FLOORS/FLOOR_POOL_BLUE",
+   "PROPS_HOUSING/ENV/BRUSH/FLOORS/FLOOR_PRISON_SHOWER",
+   "PROPS_HOUSING/ENV/BRUSH/WALLS/WALL_JAILSHOWER",
+   "PROPS_HOUSING/ENV/BRUSH/WALLS/WALL_POOL_BLUE",
+   "PROPS_HOUSING/ENV/BRUSH/WALLS/WALL_RESTROOMBSHOWER",
+   "PROPS_HOUSING/ENV/BRUSH/WALLS/WALL_SHOWER_PALEBLUE",
+   "PROPS_HOUSING/ENV/BRUSH/WALLS/WALL_TOFFEE_HIGH",
+   "PROPS_SIMS2/SIMSTEXNIGHTLIFE/WALLS/INTWALL/WALL_CURTAIN_GREY",
+   "PROP_IDBS/OPEN_SOURCE_BB",
+   "PROP_IDBS_HOUSING/TOKO/GORDEN",
+   "PROP_IDBS_HOUSING/TOKO/GORDEN2",
+   "QUALITY/E8TRIM_DARK"
+  ],
+  "textures_flat": [],
+  "models_unmapped": [
+   "env/decor/cabinart/cabinart.mdl",
+   "env/decor/paint_cotopaxi_volc/paint_cotopaxi_volc.mdl",
+   "env/decor/paint_kangerlussuaq/paint_kangerlussuaq.mdl",
+   "env/decor/painting/paint_ship_a.mdl",
+   "env/decor/showerstep/showerstep.mdl",
+   "env/decor/three_paintingsv/three_paintingsv.mdl",
+   "env/furniture/clinic_reception/clinic_recep_bits.mdl",
+   "env/furniture/clinic_reception/clinic_reception.mdl",
+   "env/misc/elevator/elevator_direction_panel.mdl",
+   "env/misc/pan_rack/pan_rack.mdl",
+   "env/misc/rafthut/raft_lilypad_b.mdl",
+   "laboratory/wormhole.mdl",
+   "props/cs_assault/fireescape_top.mdl",
+   "props/cs_militia/fishriver01.mdl",
+   "props/cs_office/address.mdl",
+   "props/cs_office/projector.mdl",
+   "props/hr_massive_gohr/survival_electrical_installation.mdl",
+   "props/hr_massive_gohr/survival_junk_05.mdl",
+   "props/hr_massive_gohr/survival_junk_06.mdl",
+   "props/rooms/messhall_fruitbowl.mdl",
+   "props/rooms/messhall_pecanpie.mdl",
+   "props/rooms/messhall_plate.mdl",
+   "props/rooms/messhall_tray.mdl",
+   "props_generic/urinal01.mdl",
+   "props_gmi/furniture/gas_12kg.mdl",
+   "props_gmi/furniture/gas_50kg.mdl",
+   "props_idbs/buildings/air_conditioner.mdl",
+   "props_idbs/buildings/restoad.mdl",
+   "props_idbs/buildings/tvps_warnet.mdl",
+   "props_idbs/creatures/ikan_bass.mdl",
+   "props_idbs/furniture/housing/wolvin_laptop.mdl",
+   "props_idbs/furniture/housing/wolvin_laptop_phys.mdl",
+   "props_idbs/go/soap_dispenser.mdl",
+   "props_idbs/go/toaster.mdl",
+   "props_idbs/go/towel_rack.mdl",
+   "props_idbs/go/water_cooler.mdl",
+   "props_idbs/go_fol/mall_pot_square01.mdl",
+   "props_idbs/go_fol/urban_pot_clay02.mdl",
+   "props_interiors/ac_wallunit.mdl",
+   "props_interiors/alarm_clock.mdl",
+   "props_junk/bogroll.mdl",
+   "props_junk/wetfloorsign.mdl",
+   "props_rooftop/dome004.mdl",
+   "props_urban/fountain_a.mdl",
+   "sims/gm_coffeemaker.mdl"
+  ],
+  "sounds_unmapped": [
+   "ambient/tones/projector.wav"
+  ],
+  "classes_unmapped": [],
+  "keys_unmapped": [
+   "ambient_generic.pitch",
+   "func_brush.disableshadow",
+   "func_button.resto_elevbtn",
+   "func_door.ph_forceclose",
+   "info_node_hint.starthintdisabled",
+   "item_healthkit.solid",
+   "ph_decoy_spawner.entity",
+   "ph_decoy_spawner.spawnchance",
+   "ph_decoy_spawner.spawnflags",
+   "ph_decoy_spawner.spawnmax",
+   "ph_decoy_spawner.spawnmaxtype",
+   "ph_decoy_spawner.spawnrandom",
+   "ph_decoy_spawner.takemodelfrommap",
+   "ph_map_settings.alwayshasdecoy",
+   "ph_map_settings.fullarmor",
+   "ph_map_settings.limitclass",
+   "ph_map_settings.ultpoint",
+   "ph_map_settings.unlockdoors",
+   "ph_model_bans.model1",
+   "ph_model_bans.model2",
+   "ph_model_bans.model3",
+   "ph_model_bans.spawnflags",
+   "ph_teamitem_spawner.amount",
+   "ph_teamitem_spawner.spawnent",
+   "ph_teamitem_spawner.spawnflags",
+   "ph_teamitem_spawner.spawnontarget",
+   "prop_door_rotating.solid",
+   "prop_physics.solid",
+   "prop_physics_override.solid",
+   "weapon_frag.body",
+   "weapon_frag.solid",
+   "weapon_rpg.body",
+   "weapon_rpg.solid"
+  ],
+  "links_unresolved": []
+ },
+ "counts": {
+  "textures_unmapped": 12,
+  "textures_flat": 0,
+  "models_unmapped": 45,
+  "sounds_unmapped": 1,
+  "classes_unmapped": 0,
+  "keys_unmapped": 33,
+  "links_unresolved": 0
+ }
+}

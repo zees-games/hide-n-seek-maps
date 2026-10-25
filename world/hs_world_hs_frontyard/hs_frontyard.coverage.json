@@ -1,0 +1,76 @@
+{
+ "format": "dot-bsp-coverage",
+ "version": 1,
+ "map": "ph_frontyard",
+ "sha256": "f5cb5c42a10cd91c8cf9a1a22d7948ce07362cea4c8cea4d79be72fadbfba62c",
+ "textures": {
+  "looked_up": 12,
+  "drawn": 12,
+  "by_tier": {
+   "addon": 8,
+   "default": 4
+  },
+  "free_by_tier": {
+   "addon": 10,
+   "default": 1,
+   "nearest": 1
+  },
+  "nearest_photo": [
+   "gm_construct/grass",
+   "plaster/plasterwall005a",
+   "stone/stonestair001a"
+  ]
+ },
+ "models": {
+  "looked_up": 31,
+  "by_tier": {
+   "default": 30,
+   "fallback": 1
+  }
+ },
+ "sounds": {
+  "looked_up": 0,
+  "by_tier": {}
+ },
+ "classes": {
+  "distinct": 10,
+  "entities": 391,
+  "by_tier": {
+   "default": 10
+  }
+ },
+ "keys": {
+  "catalogue": true,
+  "unmapped": {
+   "func_breakable": [
+    "modelscale"
+   ]
+  }
+ },
+ "links": {
+  "total": 0,
+  "unresolved": 0
+ },
+ "lists": {
+  "textures_unmapped": [],
+  "textures_flat": [],
+  "models_unmapped": [
+   "maxofs2d/companion_doll.mdl"
+  ],
+  "sounds_unmapped": [],
+  "classes_unmapped": [],
+  "keys_unmapped": [
+   "func_breakable.modelscale"
+  ],
+  "links_unresolved": []
+ },
+ "counts": {
+  "textures_unmapped": 0,
+  "textures_flat": 0,
+  "models_unmapped": 1,
+  "sounds_unmapped": 0,
+  "classes_unmapped": 0,
+  "keys_unmapped": 1,
+  "links_unresolved": 0
+ }
+}
