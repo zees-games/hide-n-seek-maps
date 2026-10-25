@@ -2383,6 +2383,8 @@ def mall():
          "ambient": [0.66, 0.66, 0.7], "ambient_energy": 0.55, "fog": 0.001},
         kill_y=-10.0,
     )
+    # The pilot of the photographic look (HsMaterials.PBR_KINDS); the other hand-made maps keep the pastel grid.
+    m.doc["look"] = "pbr"
     X0, X1, Z0, Z1 = -36.0, 36.0, -16.0, 16.0
     H = 4.0
     Y = (0.0, H)

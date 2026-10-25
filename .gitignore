@@ -2,3 +2,9 @@ __pycache__/
 *.pyc
 .DS_Store
 .godot/
+.stores/
+dist/
+# World packs carry the source map's faces and lightmap: local only (README, licences). Coverage is the ratchet.
+world/.stores/
+world/*/*
+!world/*/*.coverage.json

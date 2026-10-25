@@ -1,0 +1,87 @@
+{
+ "format": "dot-bsp-coverage",
+ "version": 1,
+ "map": "ph_hotel",
+ "sha256": "20fd9a96dedddb0a6d04fcae22eaf8a4d1e1ceb93fa86853c91d1a3fd7279e44",
+ "textures": {
+  "looked_up": 57,
+  "drawn": 56,
+  "by_tier": {
+   "addon": 44,
+   "default": 12,
+   "fallback": 1
+  },
+  "free_by_tier": {
+   "addon": 53,
+   "default": 2,
+   "nearest": 1
+  },
+  "nearest_photo": [
+   "brick/brickwall008a",
+   "cs_havana/wllp01",
+   "cs_italy/wallpap04b",
+   "plaster/milceil001",
+   "plaster/plasterwall046c",
+   "plaster/plasterwall047b",
+   "plaster/wallpaper004a",
+   "plaster/wallpaper005a",
+   "tile/tilefloor018a_c17",
+   "tile/tilewall007e"
+  ]
+ },
+ "models": {
+  "looked_up": 105,
+  "by_tier": {
+   "default": 105
+  }
+ },
+ "sounds": {
+  "looked_up": 1,
+  "by_tier": {
+   "fallback": 1
+  }
+ },
+ "classes": {
+  "distinct": 27,
+  "entities": 671,
+  "by_tier": {
+   "default": 27
+  }
+ },
+ "keys": {
+  "catalogue": true,
+  "unmapped": {
+   "ambient_generic": [
+    "pitch"
+   ]
+  }
+ },
+ "links": {
+  "total": 62,
+  "unresolved": 0
+ },
+ "lists": {
+  "textures_unmapped": [
+   "CS_ITALY/WALLPAP04B"
+  ],
+  "textures_flat": [],
+  "models_unmapped": [],
+  "sounds_unmapped": [
+   "ph_hotel/swans_splashdown.wav"
+  ],
+  "classes_unmapped": [],
+  "keys_unmapped": [
+   "ambient_generic.pitch"
+  ],
+  "links_unresolved": []
+ },
+ "counts": {
+  "textures_unmapped": 1,
+  "textures_flat": 0,
+  "models_unmapped": 0,
+  "sounds_unmapped": 1,
+  "classes_unmapped": 0,
+  "keys_unmapped": 1,
+  "links_unresolved": 0
+ }
+}

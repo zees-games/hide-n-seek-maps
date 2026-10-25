@@ -758,6 +758,8 @@ def main(argv):
         raise SystemExit("the document no longer shares the map's lists: settle the spawns from the document")
     if terrain:
         swap_terrain(doc, tris, "grass", TERRAIN_TINT, budget)
+    # The frame a world pack regenerated at this scale is drawn in (tools/worlds.tsv, regen_worlds.sh): the shift above, undone.
+    doc["world"] = {"pack": "hs_world_" + mid, "metres_per_unit": round(S, 6), "offset": [round(-ox, 5), round(-oy, 5), round(-oz, 5)]}
     out_path = out_path or os.path.join(build_maps.ROOT, "maps", mid + ".json")
     with open(out_path, "w") as f:
         f.write(json.dumps(doc, indent=1) + "\n")

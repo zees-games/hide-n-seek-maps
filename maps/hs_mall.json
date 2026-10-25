@@ -38,6 +38,7 @@
   "fog": 0.001
  },
  "kill_y": -10.0,
+ "look": "pbr",
  "boxes": [
   {
    "at": [

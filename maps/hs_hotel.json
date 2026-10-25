@@ -34,6 +34,15 @@
  "kill_y": -20.0,
  "seeker_pace": 0.25,
  "source": "https://gamebanana.com/mods/61495",
+ "world": {
+  "pack": "hs_world_hs_hotel",
+  "metres_per_unit": 0.02667,
+  "offset": [
+   22.9362,
+   0.0,
+   -12.37488
+  ]
+ },
  "boxes": [
   {
    "at": [
