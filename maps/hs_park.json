@@ -4452,5 +4452,9 @@
    ]
   }
  ],
+ "ambient": {
+  "level": 1.5,
+  "lively": true
+ },
  "look": "pbr"
 }

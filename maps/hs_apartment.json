@@ -33,7 +33,7 @@
  },
  "kill_y": -20.0,
  "players_per_seeker": 2.0,
-  "seeker_pace": 0.6,
+ "seeker_pace": 0.6,
  "source": "https://gamebanana.com/mods/61479",
  "boxes": [
   {
@@ -4531,5 +4531,8 @@
     13.58
    ]
   }
- ]
+ ],
+ "ambient": {
+  "level": 0.7
+ }
 }

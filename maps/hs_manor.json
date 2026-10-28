@@ -8497,5 +8497,8 @@
    ]
   }
  ],
+ "ambient": {
+  "level": 0.8
+ },
  "look": "pbr"
 }

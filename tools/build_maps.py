@@ -3940,11 +3940,53 @@ MAPS = {
     "hs_museum": museum,
 }
 
+# Each map's `ambient` block for DotAmbienceDirector: bed level (1.0 is the stock 0.35 bed) and whether
+# the birdsong bed may play. Interiors sit under 1, open ground over; only parks, woods and gardens
+# are lively. Maps that arrive from tools/import_bsp.py are patched by `--ambient`.
+AMBIENT = {
+    "hs_apartments": (0.7, False),
+    "hs_apartment": (0.7, False),
+    "hs_camp": (1.5, True),
+    "hs_castle": (1.0, False),
+    "hs_frontyard": (1.3, True),
+    "hs_hotel": (0.7, False),
+    "hs_mall": (0.7, False),
+    "hs_manor": (0.8, False),
+    "hs_museum": (0.7, False),
+    "hs_park": (1.5, True),
+    "hs_restaurant": (0.7, False),
+    "hs_school": (0.9, False),
+    "hs_ship": (1.0, False),
+    "hs_village": (1.4, True),
+    "hs_warehouse": (0.8, False),
+}
+
+
+def ambient_block(mid):
+    level, lively = AMBIENT[mid]
+    block = {"level": level}
+    if lively:
+        block["lively"] = True
+    return block
+
+
+def patch_ambient():
+    """Adds the block to every document in maps/, imported ones included, without touching its layout."""
+    for mid in AMBIENT:
+        path = os.path.join(ROOT, "maps", mid + ".json")
+        with open(path) as f:
+            doc = json.load(f)
+        doc["ambient"] = ambient_block(mid)
+        with open(path, "w") as f:
+            f.write(json.dumps(doc, indent=1) + "\n")
+
+
 
 def write_all(check):
     stale = []
     for mid, make in MAPS.items():
         doc = make()
+        doc["ambient"] = ambient_block(mid)
         # The photographic look (game-hide-n-seek's HsMaterials.PBR_KINDS); a client without the textures draws the pastel grid.
         doc["look"] = "pbr"
         text = json.dumps(doc, indent=1, sort_keys=False) + "\n"
@@ -4027,6 +4069,9 @@ if __name__ == "__main__":
                 row.append(ch)
             TOYS.pop("_probe", None)
             print("%4d " % z + "".join(row) + ("  -" if z % 10 == 0 else ""))
+        sys.exit(0)
+    if "--ambient" in sys.argv:
+        patch_ambient()
         sys.exit(0)
     if "--sync-sizes" in sys.argv:
         sync_sizes()
