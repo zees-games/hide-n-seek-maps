@@ -1,0 +1,59 @@
+[
+  {
+    "paths": [
+      ""
+    ],
+    "licence": "MIT",
+    "author": "TMC",
+    "url": "https://github.com/zees-games/hide-n-seek-maps",
+    "title": "hide-n-seek-maps (original content)"
+  },
+  {
+    "paths": [
+      "maps/hs_apartment.json",
+      "world/hs_world_hs_apartment/"
+    ],
+    "licence": "CC-BY-NC-ND-4.0",
+    "exception": "credited-community-map",
+    "title": "Apartment",
+    "author": "Tib",
+    "source_url": "https://gamebanana.com/mods/61479",
+    "removal_contact": "https://github.com/zees-games/hide-n-seek-maps/issues"
+  },
+  {
+    "paths": [
+      "maps/hs_frontyard.json",
+      "world/hs_world_hs_frontyard/"
+    ],
+    "licence": "none stated",
+    "exception": "credited-community-map",
+    "title": "Front Yard",
+    "author": "axoh",
+    "source_url": "https://gamebanana.com/mods/398632",
+    "removal_contact": "https://github.com/zees-games/hide-n-seek-maps/issues"
+  },
+  {
+    "paths": [
+      "maps/hs_hotel.json",
+      "world/hs_world_hs_hotel/"
+    ],
+    "licence": "CC-BY-NC-ND-4.0",
+    "exception": "credited-community-map",
+    "title": "Hotel",
+    "author": "1Vodker1",
+    "source_url": "https://gamebanana.com/mods/61495",
+    "removal_contact": "https://github.com/zees-games/hide-n-seek-maps/issues"
+  },
+  {
+    "paths": [
+      "maps/hs_restaurant.json",
+      "world/hs_world_hs_restaurant/"
+    ],
+    "licence": "none stated",
+    "exception": "credited-community-map",
+    "title": "Restaurant",
+    "author": "Wolvindra Vinzuerio",
+    "source_url": "https://steamcommunity.com/sharedfiles/filedetails/?id=3270930065",
+    "removal_contact": "https://github.com/zees-games/hide-n-seek-maps/issues"
+  }
+]
