@@ -4,7 +4,7 @@
 # Packs and stores are local only (gitignored, never published): see the README's licence notes before shipping one.
 HERE="$(cd "$(dirname "$0")" && pwd)"
 OUT="$HERE/../world"
-BSP="${DOTBSP_PATH:-$HERE/../../dot-map/tools/bsp}"
+BSP="${DOTBSP_PATH:-$HERE/../../dot-map-convert}"
 # Inside world/ so a game's res://world link reaches the PBR sets and models by the pack's relative path; Godot skips the dot folder.
 STORES="${STORES:-$OUT/.stores}"
 rc=0
