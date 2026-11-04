@@ -32,8 +32,8 @@
   "ambient_energy": 0.5
  },
  "kill_y": -20.0,
- "players_per_seeker": 2.0,
- "seeker_pace": 0.4,
+ "players_per_seeker": 8.0,
+ "seeker_pace": 0.15,
  "source": "https://gamebanana.com/mods/61479",
  "boxes": [
   {

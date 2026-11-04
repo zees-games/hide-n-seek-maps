@@ -64,6 +64,8 @@ From game-hide-n-seek: `./game.sh test headless_maps headless_climb`, and look a
 
 **Not yet on GitHub** (2026-10-10): the remote is set, the repository is the owner's to create, and nothing is pushed or published.
 
+**Publishing**: `tools/publish.sh` is the exact recipe (id `hide-n-seek-maps`, `world/` and `tools/` left out, lock `content.lock.json` = the production pin; a dev publish uses its own `--lock`). Publish from a clean checkout of pushed HEAD, before the game pack.
+
 **`provides.json` is what lists this pack in the Workshop, and `tools/build_provides.py` writes it** from the documents in the folder (an entry per map, `map_kind` and the game it is for are constants at the top). Edit the script, run it, commit both; `--check` (CI) fails on a stale file. A pack whose newest READY version has no `provides` block is not a Workshop item. It ships because the pack takes every file outside the excluded folders.
 
 ## Ambience level

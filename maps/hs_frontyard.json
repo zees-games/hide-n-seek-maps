@@ -32,7 +32,7 @@
   "ambient_energy": 0.5
  },
  "kill_y": -20.0,
- "players_per_seeker": 2.0,
+ "players_per_seeker": 4.0,
  "seeker_pace": 0.9,
  "source": "https://gamebanana.com/mods/398632",
  "boxes": [
@@ -3740,14 +3740,6 @@
    },
    {
     "at": [
-     5.096,
-     0.05,
-     1.019
-    ],
-    "yaw": 84.253
-   },
-   {
-    "at": [
      -31.176,
      0.0,
      -20.198
@@ -3817,6 +3809,14 @@
      -11.198
     ],
     "yaw": -159.542
+   },
+   {
+    "at": [
+     5.096,
+     0.05,
+     1.019
+    ],
+    "yaw": 84.253
    }
   ],
   "seekers": [
