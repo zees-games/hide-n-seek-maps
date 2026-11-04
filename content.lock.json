@@ -1,0 +1,15 @@
+{
+	"format": 1,
+	"mirrors": [],
+	"origin": "https://dotgames.org/content",
+	"packs": [
+		{
+			"id": "gamemann/hide-n-seek-maps",
+			"into": "",
+			"kind": "pack",
+			"manifest_sha256": "bcf29a40ba6311c39dd69156e287562512b553591b579381dec4ab26e78087dd",
+			"optional": false,
+			"version": "1.0.1"
+		}
+	]
+}
