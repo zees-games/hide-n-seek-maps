@@ -27,6 +27,7 @@ Every map has a way round (a chase that reaches a dead end is over), somewhere u
 | `hs_frontyard` (Front Yard) | A suburban house and its front yard, imported from a Source map (see Credits): a lawn with a hedge, fences and a shed to hide behind, and a house whose doors open and shut. |
 | `hs_hotel` (Hotel) | A small hotel imported from a Source map (see Credits), built 1.4 times its real size: a lobby, corridors and guest rooms of Kenney's prototype grid, one door you open, and 120 pieces of furniture to crouch behind. |
 | `hs_restaurant` (Restaurant) | A hotel-and-restaurant concept imported from a Workshop map (see Credits): a glass-roofed atrium hall with a gallery round it, a sunken pond court, a canteen, guest rooms upstairs, an office floor underground, doors that slide into their walls, and 40 pieces of furniture to crouch behind. |
+| `hs_mountainresort` | gm_mountainresort | prvec | https://steamcommunity.com/sharedfiles/filedetails/?id=2312309380 |
 
 ## How they are made
 
@@ -54,6 +55,8 @@ The builder moves any spawn that a prop or a wall was put on top of to the neare
 | `hs_restaurant` | ph_restaurant_os | Wolvindra Vinzuerio | https://steamcommunity.com/sharedfiles/filedetails/?id=3270930065 |
 
 The author's licence note: "do whatever idc just dont say this terrible map is urs". We credit the author in the map's `author` and `source` fields and will remove the map on request.
+
+`hs_mountainresort` (gm_mountainresort, "Mountain Resort", by prvec, https://steamcommunity.com/sharedfiles/filedetails/?id=2312309380) was converted with `import_bsp.py gm_mountainresort.bsp hs_mountainresort "Mountain Resort" prvec https://steamcommunity.com/sharedfiles/filedetails/?id=2312309380 --terrain`. Workshop terms on the page: "Do not reupload any content. Also it cannot be used in paid work you do without my consent"; no licence permitting redistribution is stated. **Flagged: the owner decided to convert it anyway; the arrangement is credit, link and removal on request, and the map is removed on request by the author.** Only the layout is used (boxes, doors, starts); every texture, model and sound is a free replacement or absent.
 
 `hs_apartment` (ph_apartment by Tib, https://gamebanana.com/mods/61479) is Creative Commons Attribution-NonCommercial-NoDerivs 4.0; credit, a link and removal on request is the arrangement, **this map is removed on request by the author**. Every texture and model is replaced by the game's own CC0 stand-ins. It is in the pack but **not banded in `headless_bots`** (`HS_BOTS_MAPS`): a flat 16 by 15 m is small for the bands. Its best setting (`--cover=40 --cover-gap=1.5 --cover-clear=1.0 --cover-seed=11`, which the document is built with) gives hiders a mean of 112 s and 11 of 24 won, 26% never found, but 89 of 140 hiders walk the 8 m (band 112), somebody is caught in the first 3 s of a seek in some rounds, and a stand-in lingers 11.8 s beside a door panel (band 9). Moving the seekers or hiders (`--seekers-at`, `--hiders-at`, `--hiders-far`, `--cover-away`) only cost the win rate.
 
