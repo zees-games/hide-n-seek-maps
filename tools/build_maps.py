@@ -3959,6 +3959,7 @@ AMBIENT = {
     "hs_ship": (1.0, False),
     "hs_village": (1.4, True),
     "hs_warehouse": (0.8, False),
+    "gm_villa": (1.3, True),
 }
 
 
