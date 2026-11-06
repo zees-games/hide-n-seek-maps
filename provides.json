@@ -10,6 +10,13 @@
     "entries": [
         {
             "kind": "map",
+            "id": "deco_mansion",
+            "name": "Deco Mansion",
+            "scene": "maps/deco_mansion.json",
+            "map_kind": "hideseek"
+        },
+        {
+            "kind": "map",
             "id": "hs_apartment",
             "name": "Apartment",
             "scene": "maps/hs_apartment.json",

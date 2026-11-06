@@ -3944,6 +3944,7 @@ MAPS = {
 # the birdsong bed may play. Interiors sit under 1, open ground over; only parks, woods and gardens
 # are lively. Maps that arrive from tools/import_bsp.py are patched by `--ambient`.
 AMBIENT = {
+    "deco_mansion": (0.9, False),
     "hs_apartments": (0.7, False),
     "hs_apartment": (0.7, False),
     "hs_camp": (1.5, True),
