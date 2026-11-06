@@ -119,6 +119,13 @@
             "name": "Dockside Warehouse",
             "scene": "maps/hs_warehouse.json",
             "map_kind": "hideseek"
+        },
+        {
+            "kind": "map",
+            "id": "sunken_resort",
+            "name": "Sunken Resort",
+            "scene": "maps/sunken_resort.json",
+            "map_kind": "hideseek"
         }
     ]
 }
