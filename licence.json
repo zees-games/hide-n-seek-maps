@@ -55,5 +55,16 @@
     "author": "Wolvindra Vinzuerio",
     "source_url": "https://steamcommunity.com/sharedfiles/filedetails/?id=3270930065",
     "removal_contact": "https://github.com/zees-games/hide-n-seek-maps/issues"
+  },
+  {
+    "paths": [
+      "maps/functionalist_night.json"
+    ],
+    "licence": "none stated",
+    "exception": "credited-community-map",
+    "title": "Functionalist Night",
+    "author": "VITAPLEX",
+    "source_url": "https://steamcommunity.com/sharedfiles/filedetails/?id=3382694345",
+    "removal_contact": "https://github.com/zees-games/hide-n-seek-maps/issues"
   }
 ]
