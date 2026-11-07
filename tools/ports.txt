@@ -1,0 +1,1 @@
+sunken_resort	3376822715	sunken_resort.bsp	--terrain --cover=40 --lobby=60,6 --merge-boxes --min-box-volume=0.01 --min-box-thickness=0.5	
