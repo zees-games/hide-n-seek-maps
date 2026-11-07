@@ -17,6 +17,20 @@
         },
         {
             "kind": "map",
+            "id": "functionalist_night",
+            "name": "Functionalist Night",
+            "scene": "maps/functionalist_night.json",
+            "map_kind": "hideseek"
+        },
+        {
+            "kind": "map",
+            "id": "gm_villa",
+            "name": "Villa",
+            "scene": "maps/gm_villa.json",
+            "map_kind": "hideseek"
+        },
+        {
+            "kind": "map",
             "id": "hs_apartment",
             "name": "Apartment",
             "scene": "maps/hs_apartment.json",
