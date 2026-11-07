@@ -66,5 +66,16 @@
     "author": "VITAPLEX",
     "source_url": "https://steamcommunity.com/sharedfiles/filedetails/?id=3382694345",
     "removal_contact": "https://github.com/zees-games/hide-n-seek-maps/issues"
+  },
+  {
+    "paths": [
+      "maps/hs_mountainresort.json"
+    ],
+    "licence": "none stated",
+    "exception": "credited-community-map",
+    "title": "Mountain Resort",
+    "author": "prvec (Steam Workshop)",
+    "source_url": "https://steamcommunity.com/sharedfiles/filedetails/?id=2312309380",
+    "removal_contact": "https://github.com/zees-games/hide-n-seek-maps/issues"
   }
 ]

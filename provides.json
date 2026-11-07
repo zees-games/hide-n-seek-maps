@@ -73,6 +73,13 @@
         },
         {
             "kind": "map",
+            "id": "hs_mountainresort",
+            "name": "Mountain Resort",
+            "scene": "maps/hs_mountainresort.json",
+            "map_kind": "hideseek"
+        },
+        {
+            "kind": "map",
             "id": "hs_museum",
             "name": "Halden Museum",
             "scene": "maps/hs_museum.json",

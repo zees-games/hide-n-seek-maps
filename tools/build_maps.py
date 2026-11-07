@@ -3953,6 +3953,7 @@ AMBIENT = {
     "hs_hotel": (0.7, False),
     "hs_mall": (0.7, False),
     "hs_manor": (0.8, False),
+    "hs_mountainresort": (1.4, False),
     "hs_museum": (0.7, False),
     "hs_park": (1.5, True),
     "hs_restaurant": (0.7, False),
