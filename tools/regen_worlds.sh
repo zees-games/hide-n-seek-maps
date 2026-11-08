@@ -13,9 +13,9 @@ while IFS=$'\t' read -r id key scale y0 crop; do
     d="$OUT/hs_world_$id"; mkdir -p "$d"
     # An optional fifth column: a crop for dot-map's regen, `auto` for the document's boxes (tools/world_crop.py).
     cropargs=()
-    [ "$crop" = "auto" ] && crop="$(python3 -I "$HERE/world_crop.py" "$id")"
+    [ "$crop" = "auto" ] && crop="$(python3 -P "$HERE/world_crop.py" "$id")"
     [ -n "$crop" ] && cropargs=("--crop=$crop")
-    python3 -I "$BSP/bsp.py" regen "$key" --out "$d/$id" --scale "$scale" --y0 "$y0" \
+    python3 -P "$BSP/bsp.py" regen "$key" --out "$d/$id" --scale "$scale" --y0 "$y0" \
         --pbr-store "$STORES/pbr-library" --model-store "$STORES/model-library" "${cropargs[@]}" $REGEN_ARGS \
         > "${TMPDIR:-/tmp}/regen-$id.log" 2>&1 < /dev/null
     r=$?; [ $r -ne 0 ] && rc=1
