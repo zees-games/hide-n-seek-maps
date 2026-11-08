@@ -11,9 +11,8 @@
    "default": 4
   },
   "free_by_tier": {
-   "addon": 10,
-   "default": 1,
-   "nearest": 1
+   "addon": 11,
+   "default": 1
   },
   "nearest_photo": [
    "gm_construct/grass",
@@ -41,11 +40,7 @@
  },
  "keys": {
   "catalogue": true,
-  "unmapped": {
-   "func_breakable": [
-    "modelscale"
-   ]
-  }
+  "unmapped": {}
  },
  "links": {
   "total": 0,
@@ -57,10 +52,10 @@
   "models_unmapped": [],
   "sounds_unmapped": [],
   "classes_unmapped": [],
-  "keys_unmapped": [
-   "func_breakable.modelscale"
-  ],
-  "links_unresolved": []
+  "keys_unmapped": [],
+  "links_unresolved": [],
+  "inputs_unimplemented": [],
+  "surfaces_opaque": []
  },
  "counts": {
   "textures_unmapped": 0,
@@ -68,7 +63,9 @@
   "models_unmapped": 0,
   "sounds_unmapped": 0,
   "classes_unmapped": 0,
-  "keys_unmapped": 1,
-  "links_unresolved": 0
+  "keys_unmapped": 0,
+  "links_unresolved": 0,
+  "inputs_unimplemented": 0,
+  "surfaces_opaque": 0
  }
 }

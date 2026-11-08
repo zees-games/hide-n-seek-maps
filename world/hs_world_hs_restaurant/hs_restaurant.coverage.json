@@ -12,15 +12,15 @@
    "fallback": 12
   },
   "free_by_tier": {
-   "addon": 89,
-   "default": 9,
-   "nearest": 22
+   "addon": 108,
+   "default": 12
   },
   "nearest_photo": [
    "brick/brickwall053d",
-   "brick/brickwall053e",
    "brick/offwlla",
    "building_template/building_template001a",
+   "building_template/building_template001b",
+   "building_template/building_template001d",
    "building_template/building_template001k",
    "building_template/building_template003a",
    "building_template/building_template003b",
@@ -42,15 +42,12 @@
    "plaster/milwall003",
    "plaster/offwllb",
    "plaster/offwllc_02",
-   "plaster/slide",
    "plaster/urban_plasterwall_05a",
    "prop_idbs/goplaster/plaster_ceiling_02",
    "prop_idbs/goplaster/plaster_ceiling_03",
    "prop_idbs/goplaster/vostok_wall01",
    "prop_idbs/goplaster/vostok_wall01b",
    "prop_idbs/open_source_bb",
-   "prop_idbs_housing/toko/gorden",
-   "prop_idbs_housing/toko/gorden2",
    "props_housing/env/brush/floors/floor_pool_blue",
    "props_housing/env/brush/floors/floor_prison_shower",
    "props_housing/env/brush/walls/wall_jailshower",
@@ -75,6 +72,7 @@
    "props_sims2/simstex/floor/tile/floor-marbleandrattandiagonal",
    "props_sims2/simstex/floor/tile/floor-pooldeck-concreteslab",
    "props_sims2/simstexnightlife/floor/tile/floor-tileartdecotan-accent",
+   "props_sims2/simstexnightlife/walls/intwall/wall_curtain_grey",
    "quality/e8trim_dark",
    "tile/tilewall006c",
    "tools/toolsblack_cheap",
@@ -107,9 +105,6 @@
  "keys": {
   "catalogue": true,
   "unmapped": {
-   "ambient_generic": [
-    "pitch"
-   ],
    "func_brush": [
     "disableshadow"
    ],
@@ -198,7 +193,6 @@
   ],
   "classes_unmapped": [],
   "keys_unmapped": [
-   "ambient_generic.pitch",
    "func_brush.disableshadow",
    "func_button.resto_elevbtn",
    "func_door.ph_forceclose",
@@ -232,7 +226,22 @@
    "weapon_rpg.body",
    "weapon_rpg.solid"
   ],
-  "links_unresolved": []
+  "links_unresolved": [],
+  "inputs_unimplemented": [
+   "env_citadel_energy_core.StartCharge",
+   "env_citadel_energy_core.StartDischarge",
+   "env_tonemap_controller.SetAutoExposureMax",
+   "env_tonemap_controller.SetAutoExposureMin",
+   "env_tonemap_controller.SetBloomScale",
+   "env_tonemap_controller.SetTonemapRate",
+   "env_viewpunch.ViewPunch",
+   "func_button.PressOut",
+   "lua_run.RunPassedCode",
+   "ph_teamitem_spawner.Spawn",
+   "prop_dynamic.Skin",
+   "prop_physics_override.Wake"
+  ],
+  "surfaces_opaque": []
  },
  "counts": {
   "textures_unmapped": 12,
@@ -240,7 +249,9 @@
   "models_unmapped": 0,
   "sounds_unmapped": 1,
   "classes_unmapped": 0,
-  "keys_unmapped": 33,
-  "links_unresolved": 0
+  "keys_unmapped": 32,
+  "links_unresolved": 0,
+  "inputs_unimplemented": 12,
+  "surfaces_opaque": 0
  }
 }

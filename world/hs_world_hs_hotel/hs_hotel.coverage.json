@@ -12,9 +12,8 @@
    "fallback": 1
   },
   "free_by_tier": {
-   "addon": 53,
-   "default": 2,
-   "nearest": 1
+   "addon": 54,
+   "default": 2
   },
   "nearest_photo": [
    "brick/brickwall008a",
@@ -50,11 +49,7 @@
  },
  "keys": {
   "catalogue": true,
-  "unmapped": {
-   "ambient_generic": [
-    "pitch"
-   ]
-  }
+  "unmapped": {}
  },
  "links": {
   "total": 62,
@@ -70,10 +65,16 @@
    "ph_hotel/swans_splashdown.wav"
   ],
   "classes_unmapped": [],
-  "keys_unmapped": [
-   "ambient_generic.pitch"
+  "keys_unmapped": [],
+  "links_unresolved": [],
+  "inputs_unimplemented": [
+   "env_tonemap_controller.SetBloomScale",
+   "func_areaportal.Open",
+   "func_breakable.SetDamageFilter",
+   "prop_physics.Sleep",
+   "prop_physics_multiplayer.Sleep"
   ],
-  "links_unresolved": []
+  "surfaces_opaque": []
  },
  "counts": {
   "textures_unmapped": 1,
@@ -81,7 +82,9 @@
   "models_unmapped": 0,
   "sounds_unmapped": 1,
   "classes_unmapped": 0,
-  "keys_unmapped": 1,
-  "links_unresolved": 0
+  "keys_unmapped": 0,
+  "links_unresolved": 0,
+  "inputs_unimplemented": 5,
+  "surfaces_opaque": 0
  }
 }
