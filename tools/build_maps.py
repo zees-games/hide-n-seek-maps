@@ -3688,7 +3688,7 @@ def museum():
 # dot-props' stock toys, by id: (width along the toy's x, depth along its z, height, loose).
 # A loose toy (a ball, a barrel) is pushed by whoever walks into it and needs only its own
 # room; one that stands (a swing, a see-saw) wants room round it to walk past. The numbers are
-# dot-props' DotPropToyCatalogue sizes with the frames counted in (a punching bag's post, a
+# dot-props' DotPropBodyCatalogue sizes with the frames counted in (a punching bag's post, a
 # swing's sweep).
 TOYS = {
     "beach_ball": (1.0, 1.0, 1.0, True),
