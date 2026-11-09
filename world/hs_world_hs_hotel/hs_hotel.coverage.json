@@ -7,9 +7,8 @@
   "looked_up": 57,
   "drawn": 56,
   "by_tier": {
-   "addon": 44,
-   "default": 12,
-   "fallback": 1
+   "addon": 45,
+   "default": 12
   },
   "free_by_tier": {
    "addon": 54,
@@ -18,7 +17,6 @@
   "nearest_photo": [
    "brick/brickwall008a",
    "cs_havana/wllp01",
-   "cs_italy/wallpap04b",
    "plaster/milceil001",
    "plaster/plasterwall046c",
    "plaster/plasterwall047b",
@@ -56,9 +54,7 @@
   "unresolved": 0
  },
  "lists": {
-  "textures_unmapped": [
-   "CS_ITALY/WALLPAP04B"
-  ],
+  "textures_unmapped": [],
   "textures_flat": [],
   "models_unmapped": [],
   "sounds_unmapped": [
@@ -77,7 +73,7 @@
   "surfaces_opaque": []
  },
  "counts": {
-  "textures_unmapped": 1,
+  "textures_unmapped": 0,
   "textures_flat": 0,
   "models_unmapped": 0,
   "sounds_unmapped": 1,
