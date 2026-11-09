@@ -7,9 +7,8 @@
   "looked_up": 117,
   "drawn": 120,
   "by_tier": {
-   "addon": 44,
-   "default": 61,
-   "fallback": 12
+   "addon": 56,
+   "default": 61
   },
   "free_by_tier": {
    "addon": 108,
@@ -34,7 +33,6 @@
    "gm_construct/flatgrass",
    "metal/metalceiling004a",
    "metal/metalstair_001idba",
-   "metal/metalstair_001idbb",
    "metal/metalwall014a_cheap",
    "nature/blenddirtgrass001a",
    "nature/blenddirtgrass005a",
@@ -47,14 +45,6 @@
    "prop_idbs/goplaster/plaster_ceiling_03",
    "prop_idbs/goplaster/vostok_wall01",
    "prop_idbs/goplaster/vostok_wall01b",
-   "prop_idbs/open_source_bb",
-   "props_housing/env/brush/floors/floor_pool_blue",
-   "props_housing/env/brush/floors/floor_prison_shower",
-   "props_housing/env/brush/walls/wall_jailshower",
-   "props_housing/env/brush/walls/wall_pool_blue",
-   "props_housing/env/brush/walls/wall_restroombshower",
-   "props_housing/env/brush/walls/wall_shower_paleblue",
-   "props_housing/env/brush/walls/wall_toffee_high",
    "props_housing/env/brush/walls/wall_toffee_tile",
    "props_housing/env/wood/wood_mdfcabinetunit",
    "props_housing/fish/gtaivtex/tf_twbrick2",
@@ -72,8 +62,6 @@
    "props_sims2/simstex/floor/tile/floor-marbleandrattandiagonal",
    "props_sims2/simstex/floor/tile/floor-pooldeck-concreteslab",
    "props_sims2/simstexnightlife/floor/tile/floor-tileartdecotan-accent",
-   "props_sims2/simstexnightlife/walls/intwall/wall_curtain_grey",
-   "quality/e8trim_dark",
    "tile/tilewall006c",
    "tools/toolsblack_cheap",
    "wmod_tile/tilewall001a",
@@ -172,20 +160,7 @@
   "unresolved": 0
  },
  "lists": {
-  "textures_unmapped": [
-   "PROPS_HOUSING/ENV/BRUSH/FLOORS/FLOOR_POOL_BLUE",
-   "PROPS_HOUSING/ENV/BRUSH/FLOORS/FLOOR_PRISON_SHOWER",
-   "PROPS_HOUSING/ENV/BRUSH/WALLS/WALL_JAILSHOWER",
-   "PROPS_HOUSING/ENV/BRUSH/WALLS/WALL_POOL_BLUE",
-   "PROPS_HOUSING/ENV/BRUSH/WALLS/WALL_RESTROOMBSHOWER",
-   "PROPS_HOUSING/ENV/BRUSH/WALLS/WALL_SHOWER_PALEBLUE",
-   "PROPS_HOUSING/ENV/BRUSH/WALLS/WALL_TOFFEE_HIGH",
-   "PROPS_SIMS2/SIMSTEXNIGHTLIFE/WALLS/INTWALL/WALL_CURTAIN_GREY",
-   "PROP_IDBS/OPEN_SOURCE_BB",
-   "PROP_IDBS_HOUSING/TOKO/GORDEN",
-   "PROP_IDBS_HOUSING/TOKO/GORDEN2",
-   "QUALITY/E8TRIM_DARK"
-  ],
+  "textures_unmapped": [],
   "textures_flat": [],
   "models_unmapped": [],
   "sounds_unmapped": [
@@ -244,7 +219,7 @@
   "surfaces_opaque": []
  },
  "counts": {
-  "textures_unmapped": 12,
+  "textures_unmapped": 0,
   "textures_flat": 0,
   "models_unmapped": 0,
   "sounds_unmapped": 1,
