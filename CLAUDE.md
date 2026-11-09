@@ -71,3 +71,5 @@ From game-hide-n-seek: `./game.sh test headless_maps headless_climb`, and look a
 ## Ambience level
 
 Every document carries `"ambient": {"level": n, "lively": true}` for dot-audio's `DotAmbienceDirector` (`level` multiplies the stock bed, 1.0 unchanged; `lively` lets the birdsong bed play): interiors 0.6-0.9 (a quiet room tone), open ground 1.0-1.5, and `lively` (birdsong) only on the park, camp, village and front yard. The table is `AMBIENT` in `tools/build_maps.py`, which writes it into built documents; `tools/build_maps.py --ambient` patches the imported ones, so a new map adds a row there.
+
+- **Python: `python3 -P`, never `-I`.** `-P` keeps the safe-path protection (no script dir or cwd on `sys.path`, so a planted module beside a download is not imported) but leaves the user site, where numpy lives for the gamedev user; `-I` also drops that and the converters fail with "No module named numpy". CI installs numpy into a venv on PATH, which `-P` also sees.
