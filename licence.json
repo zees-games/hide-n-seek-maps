@@ -77,5 +77,38 @@
     "author": "prvec (Steam Workshop)",
     "source_url": "https://steamcommunity.com/sharedfiles/filedetails/?id=2312309380",
     "removal_contact": "https://github.com/zees-games/hide-n-seek-maps/issues"
+  },
+  {
+    "paths": [
+      "maps/deco_mansion.json"
+    ],
+    "licence": "none stated",
+    "exception": "credited-community-map",
+    "title": "Deco Mansion",
+    "author": "Gastly_Furby_777 (Steam Workshop)",
+    "source_url": "https://steamcommunity.com/sharedfiles/filedetails/?id=3698815153",
+    "removal_contact": "https://github.com/zees-games/hide-n-seek-maps/issues"
+  },
+  {
+    "paths": [
+      "maps/gm_villa.json"
+    ],
+    "licence": "none stated",
+    "exception": "credited-community-map",
+    "title": "Villa",
+    "author": "korka007 (Steam Workshop)",
+    "source_url": "https://steamcommunity.com/sharedfiles/filedetails/?id=2633639653",
+    "removal_contact": "https://github.com/zees-games/hide-n-seek-maps/issues"
+  },
+  {
+    "paths": [
+      "maps/sunken_resort.json"
+    ],
+    "licence": "none stated",
+    "exception": "credited-community-map",
+    "title": "Sunken Resort",
+    "author": "Praisemantas (Steam Workshop)",
+    "source_url": "https://steamcommunity.com/sharedfiles/filedetails/?id=3376822715",
+    "removal_contact": "https://github.com/zees-games/hide-n-seek-maps/issues"
   }
 ]
