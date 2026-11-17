@@ -5,14 +5,14 @@
  "sha256": "f91a7b5861d3ceffd39a109eafe60af00a5564eb1bdb915b5ebfe48d8a95c8e2",
  "textures": {
   "looked_up": 117,
-  "drawn": 120,
+  "drawn": 119,
   "by_tier": {
    "addon": 56,
    "default": 61
   },
   "free_by_tier": {
    "addon": 108,
-   "default": 12
+   "default": 11
   },
   "nearest_photo": [
    "brick/brickwall053d",
@@ -69,11 +69,11 @@
   ]
  },
  "models": {
-  "looked_up": 273,
+  "looked_up": 288,
   "by_tier": {
-   "category": 44,
-   "default": 221,
-   "skybox": 8
+   "category": 53,
+   "default": 223,
+   "skybox": 12
   }
  },
  "sounds": {
@@ -205,15 +205,11 @@
   "inputs_unimplemented": [
    "env_citadel_energy_core.StartCharge",
    "env_citadel_energy_core.StartDischarge",
-   "env_tonemap_controller.SetAutoExposureMax",
-   "env_tonemap_controller.SetAutoExposureMin",
-   "env_tonemap_controller.SetBloomScale",
    "env_tonemap_controller.SetTonemapRate",
    "env_viewpunch.ViewPunch",
    "func_button.PressOut",
    "lua_run.RunPassedCode",
    "ph_teamitem_spawner.Spawn",
-   "prop_dynamic.Skin",
    "prop_physics_override.Wake"
   ],
   "surfaces_opaque": []
@@ -226,7 +222,7 @@
   "classes_unmapped": 0,
   "keys_unmapped": 32,
   "links_unresolved": 0,
-  "inputs_unimplemented": 12,
+  "inputs_unimplemented": 8,
   "surfaces_opaque": 0
  }
 }
