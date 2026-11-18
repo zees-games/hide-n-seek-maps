@@ -69,7 +69,14 @@
    "prop_physics.Sleep",
    "prop_physics_multiplayer.Sleep"
   ],
-  "surfaces_opaque": []
+  "surfaces_opaque": [],
+  "gameplay_lost": [
+   "class_unsupported:func_areaportal (approximated)",
+   "input_unimplemented:func_areaportal.Open",
+   "input_unimplemented:func_breakable.SetDamageFilter",
+   "input_unimplemented:prop_physics.Sleep",
+   "input_unimplemented:prop_physics_multiplayer.Sleep"
+  ]
  },
  "counts": {
   "textures_unmapped": 0,
@@ -80,6 +87,21 @@
   "keys_unmapped": 0,
   "links_unresolved": 0,
   "inputs_unimplemented": 4,
-  "surfaces_opaque": 0
+  "surfaces_opaque": 0,
+  "gameplay_lost": 5
+ },
+ "gameplay": {
+  "findings": {
+   "class_unsupported": 1,
+   "input_unimplemented": 4
+  },
+  "severity": {
+   "class_unsupported": "unsupported",
+   "input_unimplemented": "unsupported"
+  },
+  "classes": {
+   "approximated": 4,
+   "implemented": 22
+  }
  }
 }

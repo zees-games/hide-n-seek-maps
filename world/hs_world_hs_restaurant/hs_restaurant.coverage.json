@@ -212,7 +212,22 @@
    "ph_teamitem_spawner.Spawn",
    "prop_physics_override.Wake"
   ],
-  "surfaces_opaque": []
+  "surfaces_opaque": [],
+  "gameplay_lost": [
+   "class_unsupported:env_viewpunch (approximated)",
+   "class_unsupported:path_track (approximated)",
+   "class_unsupported:ph_teamitem_spawner (approximated)",
+   "class_unsupported:point_tesla (approximated)",
+   "input_unimplemented:env_citadel_energy_core.StartCharge",
+   "input_unimplemented:env_citadel_energy_core.StartDischarge",
+   "input_unimplemented:env_tonemap_controller.SetTonemapRate",
+   "input_unimplemented:env_viewpunch.ViewPunch",
+   "input_unimplemented:func_button.PressOut",
+   "input_unimplemented:lua_run.RunPassedCode",
+   "input_unimplemented:ph_teamitem_spawner.Spawn",
+   "input_unimplemented:prop_physics_override.Wake",
+   "player_input:stop x2"
+  ]
  },
  "counts": {
   "textures_unmapped": 0,
@@ -223,6 +238,24 @@
   "keys_unmapped": 32,
   "links_unresolved": 0,
   "inputs_unimplemented": 8,
-  "surfaces_opaque": 0
+  "surfaces_opaque": 0,
+  "gameplay_lost": 13
+ },
+ "gameplay": {
+  "findings": {
+   "class_unsupported": 4,
+   "input_unimplemented": 8,
+   "player_input": 1
+  },
+  "severity": {
+   "class_unsupported": "unsupported",
+   "input_unimplemented": "unsupported",
+   "player_input": "unsupported"
+  },
+  "classes": {
+   "approximated": 14,
+   "ignored": 8,
+   "implemented": 41
+  }
  }
 }
