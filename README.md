@@ -24,6 +24,10 @@ Every map has a loop to run round, a high place, a spot a seeker must crouch to 
 | `hs_museum` (Halden Museum) | Two storeys round a rotunda with a whale skeleton, galleries, a dinosaur hall |
 | `hs_park` (Pinecrest Park) | Play towers and tubes, toilets, a tennis court, a pond, a ranger's cabin, woods |
 
+## Quality and ongoing improvement
+
+The maps, models, textures and sounds in this pack are being improved over time, and some of them are low quality today. Improvement is driven by the Nightly queue, a work queue where agents pick up items, and by a visual judge loop that views rendered frames and files defects until each asset passes repeated clean reviews. Known defects are filed there and fixed in later releases, and the screenshots here are regenerated as the assets improve.
+
 ## Credits
 
 The converted maps keep their authors' names in the document's `author` and `source` fields. Each map's licence entry is in [licence.json](licence.json).
