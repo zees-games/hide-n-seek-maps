@@ -1,3 +1,5 @@
+![Hide n Seek Maps banner](https://raw.githubusercontent.com/zees-games/hide-n-seek-maps/main/docs/banner.png)
+
 The maps for [game-hide-n-seek](https://github.com/zees-games/game-hide-n-seek): eleven maps of our own, nine maps converted from community work, and a practice house built into the game.
 
 A map is a JSON document, not a scene. The server reads every `.json` file in its map directory and sends the current map to each client, so players need no map files. To add a map, drop one file in the directory. The format is in [maps/README.md](maps/README.md).
