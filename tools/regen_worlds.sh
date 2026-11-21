@@ -1,17 +1,17 @@
 #!/bin/bash
-# Rebuild the world packs in tools/worlds.tsv from the lossless store through dot-map's regen.
+# Rebuild the world packs in tools/worlds.tsv from the lossless store through gs-map's regen.
 #   [REGEN_IDS="a b"] [REGEN_ARGS=...] tools/regen_worlds.sh     run it through heavy
 # Packs and stores are local only (gitignored, never published): see the README's licence notes before shipping one.
 HERE="$(cd "$(dirname "$0")" && pwd)"
 OUT="$HERE/../world"
-BSP="${DOTBSP_PATH:-$HERE/../../dot-map-convert}"
+BSP="${GSBSP_PATH:-$HERE/../../gs-map-convert}"
 # Inside world/ so a game's res://world link reaches the PBR sets and models by the pack's relative path; Godot skips the dot folder.
 STORES="${STORES:-$OUT/.stores}"
 rc=0
 while IFS=$'\t' read -r id key scale y0 crop; do
     [ -n "$REGEN_IDS" ] && [[ " $REGEN_IDS " != *" $id "* ]] && continue
     d="$OUT/hs_world_$id"; mkdir -p "$d"
-    # An optional fifth column: a crop for dot-map's regen, `auto` for the document's boxes (tools/world_crop.py).
+    # An optional fifth column: a crop for gs-map's regen, `auto` for the document's boxes (tools/world_crop.py).
     cropargs=()
     [ "$crop" = "auto" ] && crop="$(python3 -P "$HERE/world_crop.py" "$id")"
     [ -n "$crop" ] && cropargs=("--crop=$crop")

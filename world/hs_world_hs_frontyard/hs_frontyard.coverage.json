@@ -1,5 +1,5 @@
 {
- "format": "dot-bsp-coverage",
+ "format": "gs-bsp-coverage",
  "version": 1,
  "map": "ph_frontyard",
  "sha256": "f5cb5c42a10cd91c8cf9a1a22d7948ce07362cea4c8cea4d79be72fadbfba62c",

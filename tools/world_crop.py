@@ -4,7 +4,7 @@
     tools/world_crop.py <id> [margin_m]
 
 The document's solid, visible boxes' bounds, less its `world.offset`, plus a margin (1 m default); `regen_worlds.sh`
-hands it to dot-map's `bsp.py regen --crop` for a worlds.tsv row whose crop column is `auto`.
+hands it to gs-map's `bsp.py regen --crop` for a worlds.tsv row whose crop column is `auto`.
 """
 import json
 import os

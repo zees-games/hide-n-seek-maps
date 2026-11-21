@@ -106,13 +106,13 @@ Panels a player opens and shuts with the use key (E): a room's door, a cupboard,
 ]
 ```
 
-Things players play with, from dot-props' toy catalogue: `beach_ball`, `football`, `bowling_ball`, `bowling_pin`, `barrel`, `tyre`, `punching_bag`, `swing`, `seesaw`, `merry_go_round`, `wobbly_platform`, `trampoline`, `bounce_pad`, `light_switch`, `lamp_post`, `fountain`, `horn`, `bell`. The server simulates them and every client sees them where the server has them. At most 48 on a map.
+Things players play with, from gs-props' toy catalogue: `beach_ball`, `football`, `bowling_ball`, `bowling_pin`, `barrel`, `tyre`, `punching_bag`, `swing`, `seesaw`, `merry_go_round`, `wobbly_platform`, `trampoline`, `bounce_pad`, `light_switch`, `lamp_post`, `fountain`, `horn`, `bell`. The server simulates them and every client sees them where the server has them. At most 48 on a map.
 
 - `at` is the middle of the toy's foot on the floor; `yaw` turns it (a swing's bar runs along its x; a bounce pad throws along its +z, where its arrow points).
 - `links` (a switch only): the indexes in this list of the toys it turns on and off. `on` starts a lamp or a fountain off or on.
 - A ball, a pin, a barrel or a tyre is pushed by whoever walks into it, and is no wall: nobody can be stuck on one. Everything else is solid, and the stand-ins' walkable mesh goes round it.
 - Every toy goes home at the start of a round.
-- A toy the server's dot-props does not have is left out (and `hs_maps` says so); the map still plays.
+- A toy the server's gs-props does not have is left out (and `hs_maps` says so); the map still plays.
 - Keep a trampoline seven metres clear and a bounce pad's landing seven metres clear along its arrow: a trampoline throws a person 2.3 m up, so beside a low roof it would put them somewhere the map meant to be reached another way, or not at all.
 
 In the builder, `m.toy("swing", x, z, yaw)` places one and moves it to the nearest clear, floored spot within `near` metres (it stops the build when there is none); `bowling(m, x, z, yaw)` sets up ten pins and a ball as one set; `lamps_on_a_switch(m, lamps, switch)` lights a path. Each map's toys are its own `toys_<map>` function, near the end of the builder. `tools/build_maps.py --spots hs_park` prints a plan of the open floor to choose from.

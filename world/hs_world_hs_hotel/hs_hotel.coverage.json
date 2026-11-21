@@ -1,5 +1,5 @@
 {
- "format": "dot-bsp-coverage",
+ "format": "gs-bsp-coverage",
  "version": 1,
  "map": "ph_hotel",
  "sha256": "20fd9a96dedddb0a6d04fcae22eaf8a4d1e1ceb93fa86853c91d1a3fd7279e44",

@@ -1,5 +1,5 @@
 {
- "format": "dot-bsp-coverage",
+ "format": "gs-bsp-coverage",
  "version": 1,
  "map": "ph_restaurant_os",
  "sha256": "f91a7b5861d3ceffd39a109eafe60af00a5564eb1bdb915b5ebfe48d8a95c8e2",

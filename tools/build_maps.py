@@ -476,12 +476,12 @@ class Map:
     # --- Toys ----------------------------------------------------------------------
 
     def toy(self, tid, x, z, yaw=0.0, y=0.0, links=None, on=None, near=4.0, group=None):
-        """One of dot-props' toys (a beach ball, a swing, a switch...), placed by id. Settled
+        """One of gs-props' toys (a beach ball, a swing, a switch...), placed by id. Settled
         at build (`_settle_toys`) to the nearest clear, floored spot within `near` metres, so a
         hint in the right part of the map is enough. Returns its index, which a switch's
         `links` names."""
         if tid not in TOYS:
-            raise SystemExit("%s: no toy called %s (dot-props' stock: %s)" % (self.doc["id"], tid, ", ".join(sorted(TOYS))))
+            raise SystemExit("%s: no toy called %s (gs-props' stock: %s)" % (self.doc["id"], tid, ", ".join(sorted(TOYS))))
         t = {"toy": tid, "at": v3(x, y, z)}
         if yaw:
             t["yaw"] = r(yaw)
@@ -3685,10 +3685,10 @@ def museum():
 
 # --- Toys -------------------------------------------------------------------------------
 #
-# dot-props' stock toys, by id: (width along the toy's x, depth along its z, height, loose).
+# gs-props' stock toys, by id: (width along the toy's x, depth along its z, height, loose).
 # A loose toy (a ball, a barrel) is pushed by whoever walks into it and needs only its own
 # room; one that stands (a swing, a see-saw) wants room round it to walk past. The numbers are
-# dot-props' GSPropBodyCatalogue sizes with the frames counted in (a punching bag's post, a
+# gs-props' GSPropBodyCatalogue sizes with the frames counted in (a punching bag's post, a
 # swing's sweep).
 TOYS = {
     "beach_ball": (1.0, 1.0, 1.0, True),

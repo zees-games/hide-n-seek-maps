@@ -2,13 +2,13 @@
 
 The maps game-hide-n-seek plays, as JSON documents. Read `../../CLAUDE.md` and `../game-hide-n-seek/CLAUDE.md` first: the format is defined and validated by game-hide-n-seek's `game/hs_map_doc.gd`, and `maps/README.md` is the mapper's copy of it.
 
-**`maps/` is what the game reads**, through a dot-bootstrap link (`game-hide-n-seek/.gitignore` names it: `# bootstrap-link: hide-n-seek-maps/maps`). The game reads every `.json` there plus the practice house built into it; a refused document is listed by `hs_maps` with the reason, and every other map still plays.
+**`maps/` is what the game reads**, through a gs-bootstrap link (`game-hide-n-seek/.gitignore` names it: `# bootstrap-link: hide-n-seek-maps/maps`). The game reads every `.json` there plus the practice house built into it; a refused document is listed by `hs_maps` with the reason, and every other map still plays.
 
 **`tools/build_maps.py` writes every document, and the JSON is committed.** Edit the builder, run it, commit both. `--check` (CI) fails when a committed file differs from what the builder writes. The library half (walls, rooms, `against`, spawn settling and facing) came from mg-prop-hunt-maps' builder on 2026-10-10; what is this repository's own is the hide-and-seek half below it.
 
 **Prop sizes are a snapshot** (`tools/prop_sizes.json`), copied from game-hide-n-seek's `props/catalogue.json` by `--sync-sizes`, so the builder (and CI) runs without the game checked out. **`on()` rests a prop on what is under its footprint**, from the support's `tops` grid (copied from the game's `props/pieces.json`, its part-shaped collision): a bed's mattress, not its headboard's height. Re-run `--sync-sizes` after the game re-measures its props.
 
-**`tools/import_bsp.py` cuts a BSP brush into boxes with dot-map's `boxes.decompose` (never a local copy; it is the adapter: document format, texture and prop tables, per-map flags).** The flags a committed imported map was made with are not recorded, so a re-import does not reproduce its document byte for byte (and neither does the old importer). The check that does hold: a brush's boxes against the previous local cutter, which differ only where dot-map is the more correct (slabs along the slope, a thin prism as slabs rather than a rectangle twice its size).
+**`tools/import_bsp.py` cuts a BSP brush into boxes with gs-map's `boxes.decompose` (never a local copy; it is the adapter: document format, texture and prop tables, per-map flags).** The flags a committed imported map was made with are not recorded, so a re-import does not reproduce its document byte for byte (and neither does the old importer). The check that does hold: a brush's boxes against the previous local cutter, which differ only where gs-map is the more correct (slabs along the slope, a thin prism as slabs rather than a rectangle twice its size).
 
 ## What a hide-and-seek map needs, and the helpers that make it
 
@@ -41,7 +41,7 @@ The brief asked for maps as interactive as the genre's best, and what those have
 
 ## Toys
 
-Every map has a dozen or more of dot-props' toys (balls, swings, see-saws, roundabouts, trampolines, bounce pads, lamps on a switch, a fountain, a bell, a horn, barrels, tyres, skittles), chosen for the place: the school's bell is in its playground, the ship's bell and horn are on its forward deck, the castle has skittles in the courtyard and a herald's horn by the gate. Each map's are one `toys_<map>` function near the end of the builder, run by `Map.build` (`TOY_PLANS`). **A toy is a hint, settled**: `_settle_toys` moves one whose spot is taken (a prop, a wall, a door's swing, a spawn, another toy, no floor under a corner) to the nearest clear spot within its `near`, and stops the build when there is none. A bowling set settles as one. A trampoline and a bounce pad are checked against the room their flight needs (`TOY_CLEAR`), so neither can throw a hider onto a roof meant to be reached another way. `--spots <map> [y]` prints the open floor. game-hide-n-seek's `headless_maps` checks every toy stands clear and is still where it was put two seconds on.
+Every map has a dozen or more of gs-props' toys (balls, swings, see-saws, roundabouts, trampolines, bounce pads, lamps on a switch, a fountain, a bell, a horn, barrels, tyres, skittles), chosen for the place: the school's bell is in its playground, the ship's bell and horn are on its forward deck, the castle has skittles in the courtyard and a herald's horn by the gate. Each map's are one `toys_<map>` function near the end of the builder, run by `Map.build` (`TOY_PLANS`). **A toy is a hint, settled**: `_settle_toys` moves one whose spot is taken (a prop, a wall, a door's swing, a spawn, another toy, no floor under a corner) to the nearest clear spot within its `near`, and stops the build when there is none. A bowling set settles as one. A trampoline and a bounce pad are checked against the room their flight needs (`TOY_CLEAR`), so neither can throw a hider onto a roof meant to be reached another way. `--spots <map> [y]` prints the open floor. game-hide-n-seek's `headless_maps` checks every toy stands clear and is still where it was put two seconds on.
 
 ## Things the builder decides for you
 
@@ -58,9 +58,9 @@ From game-hide-n-seek: `./game.sh test headless_maps headless_climb`, and look a
 
 ## Publishing
 
-**This repository is a pack of its own, mounted on the server alone.** A server owner names it (`gamemann/hide-n-seek-maps`) in their map config; the game adds that mount's `maps/` to its catalogue (`HsModule._add_delivered_maps`). It is never in a client's content sync: a client is sent the one document being played. `.github/workflows/release.yml` runs `build_maps.py --check` and then dot-ci's release with `pack: true`. dot-server-deploy's `content/hideseek_maps/` and `examples/hideseek_client` (22 checks) prove the delivered pair works over a real socket.
+**This repository is a pack of its own, mounted on the server alone.** A server owner names it (`gamemann/hide-n-seek-maps`) in their map config; the game adds that mount's `maps/` to its catalogue (`HsModule._add_delivered_maps`). It is never in a client's content sync: a client is sent the one document being played. `.github/workflows/release.yml` runs `build_maps.py --check` and then gs-ci's release with `pack: true`. gs-server-deploy's `content/hideseek_maps/` and `examples/hideseek_client` (22 checks) prove the delivered pair works over a real socket.
 
-`project.godot` exists only so dot-ci's release can import this repository and attach the `-pack.zip`; it carries the editor's own header and no comments, because the editor rewrites the file on its first save and a checkout would show it modified.
+`project.godot` exists only so gs-ci's release can import this repository and attach the `-pack.zip`; it carries the editor's own header and no comments, because the editor rewrites the file on its first save and a checkout would show it modified.
 
 **Not yet on GitHub** (2026-10-10): the remote is set, the repository is the owner's to create, and nothing is pushed or published.
 
@@ -70,6 +70,6 @@ From game-hide-n-seek: `./game.sh test headless_maps headless_climb`, and look a
 
 ## Ambience level
 
-Every document carries `"ambient": {"level": n, "lively": true}` for dot-audio's `GSAmbienceDirector` (`level` multiplies the stock bed, 1.0 unchanged; `lively` lets the birdsong bed play): interiors 0.6-0.9 (a quiet room tone), open ground 1.0-1.5, and `lively` (birdsong) only on the park, camp, village and front yard. The table is `AMBIENT` in `tools/build_maps.py`, which writes it into built documents; `tools/build_maps.py --ambient` patches the imported ones, so a new map adds a row there.
+Every document carries `"ambient": {"level": n, "lively": true}` for gs-audio's `GSAmbienceDirector` (`level` multiplies the stock bed, 1.0 unchanged; `lively` lets the birdsong bed play): interiors 0.6-0.9 (a quiet room tone), open ground 1.0-1.5, and `lively` (birdsong) only on the park, camp, village and front yard. The table is `AMBIENT` in `tools/build_maps.py`, which writes it into built documents; `tools/build_maps.py --ambient` patches the imported ones, so a new map adds a row there.
 
 - **Python: `python3 -P`, never `-I`.** `-P` keeps the safe-path protection (no script dir or cwd on `sys.path`, so a planted module beside a download is not imported) but leaves the user site, where numpy lives for the gamedev user; `-I` also drops that and the converters fail with "No module named numpy". CI installs numpy into a venv on PATH, which `-P` also sees.

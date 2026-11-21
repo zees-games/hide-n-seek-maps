@@ -6,7 +6,7 @@ A map is a JSON document, not a scene. The server reads every `.json` file in it
 
 ## Using it
 
-[dot-bootstrap](https://github.com/gamespice-platform/bootstrap) clones this repository next to game-hide-n-seek and links it in as `maps/`. Run `./game.sh` in game-hide-n-seek and you play these maps. On a server they are delivered as one pack (`hideseek_maps`), which `./game.sh online` and `./game.sh server` build for you.
+[gs-bootstrap](https://github.com/gamespice-platform/bootstrap) clones this repository next to game-hide-n-seek and links it in as `maps/`. Run `./game.sh` in game-hide-n-seek and you play these maps. On a server they are delivered as one pack (`hideseek_maps`), which `./game.sh online` and `./game.sh server` build for you.
 
 ## Our maps
 
@@ -66,7 +66,7 @@ Converted maps come from `tools/import_bsp.py`, which turns a Source 1 `.bsp` in
 
 ## Drawn worlds (local only)
 
-`tools/regen_worlds.sh` can build a drawn world for a map (using dot-map's `bsp.py regen`) into `world/`. Those packs carry the source author's own art and lighting, so they are never published: `tools/publish.sh` is the only publish command and it skips `world/`. The NC-ND maps (`hs_hotel`, `hs_apartment`) stay local until the owner decides.
+`tools/regen_worlds.sh` can build a drawn world for a map (using gs-map's `bsp.py regen`) into `world/`. Those packs carry the source author's own art and lighting, so they are never published: `tools/publish.sh` is the only publish command and it skips `world/`. The NC-ND maps (`hs_hotel`, `hs_apartment`) stay local until the owner decides.
 
 ## Licence
 
