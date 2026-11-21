@@ -3688,7 +3688,7 @@ def museum():
 # dot-props' stock toys, by id: (width along the toy's x, depth along its z, height, loose).
 # A loose toy (a ball, a barrel) is pushed by whoever walks into it and needs only its own
 # room; one that stands (a swing, a see-saw) wants room round it to walk past. The numbers are
-# dot-props' DotPropBodyCatalogue sizes with the frames counted in (a punching bag's post, a
+# dot-props' GSPropBodyCatalogue sizes with the frames counted in (a punching bag's post, a
 # swing's sweep).
 TOYS = {
     "beach_ball": (1.0, 1.0, 1.0, True),
@@ -3940,7 +3940,7 @@ MAPS = {
     "hs_museum": museum,
 }
 
-# Each map's `ambient` block for DotAmbienceDirector: bed level (1.0 is the stock 0.35 bed) and whether
+# Each map's `ambient` block for GSAmbienceDirector: bed level (1.0 is the stock 0.35 bed) and whether
 # the birdsong bed may play. Interiors sit under 1, open ground over; only parks, woods and gardens
 # are lively. Maps that arrive from tools/import_bsp.py are patched by `--ambient`.
 AMBIENT = {
